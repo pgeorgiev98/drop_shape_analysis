@@ -5,6 +5,11 @@
 #include <QMessageBox>
 #include <QLineSeries>
 #include <QHBoxLayout>
+#include <QGridLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QtMath>
+#include <limits>
 
 #include <QDebug>
 
@@ -14,12 +19,29 @@ static QColor colors[] = {Qt::red, Qt::green, Qt::blue, Qt::cyan, Qt::magenta};
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
-	, m_layout(new QHBoxLayout)
+    , m_chartsLayout(new QHBoxLayout)
+    , m_inputb(new QDoubleSpinBox)
+    , m_inputd(new QDoubleSpinBox)
+    , m_chart(new QChartView)
 {
-	setFixedSize(500, 500);
+    m_chart->setMinimumSize(500, 500);
+    m_inputb->setRange(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max());
+    m_inputd->setRange(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max());
+    //setFixedSize(500, 500);
 	QWidget *w = new QWidget;
-	w->setLayout(m_layout);
+    w->setLayout(m_chartsLayout);
 	setCentralWidget(w);
+    QGridLayout *grid = new QGridLayout;
+    grid->addWidget(new QLabel("b: "), 1, 0);
+    grid->addWidget(new QLabel("d: "), 2, 0);
+    grid->setColumnStretch(1, 1);
+    grid->addWidget(m_inputb, 1, 1);
+    grid->addWidget(m_inputd, 2, 1);
+    m_chartsLayout->addLayout(grid);
+    QPushButton *button = new QPushButton("Input");
+    grid->addWidget(button, 3, 0, 1, 2);
+    connect(button, &QPushButton::clicked, this, &MainWindow::onInputButtonClicked);
+    m_chartsLayout->addWidget(m_chart);
 }
 
 static bool expectChar(QTextStream &in, char c)
@@ -68,19 +90,20 @@ void MainWindow::addFile(const QString &file)
 
 void MainWindow::plot(QVector<QVector<QPointF>> things)
 {
-	QChartView *view = new QChartView;
-	m_layout->addWidget(view);
+    qDebug() << "Plotting...";
+    m_chart->chart()->removeAllSeries();
 	for (auto points : things) {
 		QLineSeries *series = new QLineSeries(this);
 
 		for (auto p : points)
 			series->append(p.x(), p.y());
 
-		view->chart()->addSeries(series);
+        m_chart->chart()->addSeries(series);
 	}
-	//view->chart()->legend()->hide();
-	view->chart()->createDefaultAxes();
-	view->setRenderHint(QPainter::Antialiasing);
+    m_chart->chart()->legend()->hide();
+    m_chart->chart()->createDefaultAxes();
+    m_chart->setRenderHint(QPainter::Antialiasing);
+    qDebug() << "Done";
 }
 
 /*
@@ -105,3 +128,36 @@ void MainWindow::paintEvent(QPaintEvent *)
 	}
 }
 */
+
+void MainWindow::onInputButtonClicked()
+{
+    qDebug() << "Generating model...";
+    double b, d;
+    b = m_inputb->value();
+    d = m_inputd->value();
+    QVector<QPointF> drop;
+    double x0 = 0, z0 = 0, phi0 = 0;
+    double x1, z1, phi1;
+    const double h = 0.1;
+    while(x0 <= 1)
+    {
+        drop.append(QPointF(x0, z0));
+        x1 = x0 + h * cos(phi0);
+        z1 = z0 + h * sin(phi0);
+        if(x0 == 0)
+        {
+            phi1 = phi0 + h * b;
+        }
+        else
+        {
+            phi1 = phi0 + h * (2*b + d*z0 - sin(phi0)/x0);
+        }
+        x0 = x1;
+        z0 = z1;
+        phi0 = phi1;
+    }
+    qDebug() << "Done";
+
+    plot({drop});
+
+}

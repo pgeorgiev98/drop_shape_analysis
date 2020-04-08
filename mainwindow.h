@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QChartView>
+#include <QDoubleSpinBox>
 
 class QHBoxLayout;
 
@@ -16,13 +17,14 @@ public:
 public slots:
 	//void addFile(const QString &file);
 	void plot(QVector<QVector<QPointF>> things);
+    void onInputButtonClicked();
 
 protected:
 	//void paintEvent(QPaintEvent *) override;
 
 private:
-	QtCharts::QChartView *m_chart1;
-	QtCharts::QChartView *m_chart2;
-	QHBoxLayout *m_layout;
+    QHBoxLayout *m_chartsLayout;
+    QDoubleSpinBox *m_inputb, *m_inputd;
+    QtCharts::QChartView *m_chart;
 };
 #endif // MAINWINDOW_H

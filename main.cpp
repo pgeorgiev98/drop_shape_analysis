@@ -6,19 +6,10 @@
 
 int main(int argc, char *argv[])
 {
-	if (argc <= 4)
-		return 0;
+
 	QApplication a(argc, argv);
 	MainWindow w;
-	/*
-	for (int i = 1; i < argc; ++i)
-		w.addFile(argv[i]);
-		*/
-
-	/*
-	double b = QString(argv[1]).toDouble();
-	double d = QString(argv[2]).toDouble();
-	*/
+    /*
 	const double h = QString(argv[1]).toDouble();
 	const int n = QString(argv[2]).toInt();
 	const double b = QString(argv[3]).toDouble();
@@ -69,10 +60,10 @@ int main(int argc, char *argv[])
 		phi0 = phi1;
 	}
 
-	w.plot({drop});
+//	w.plot({drop});
 	//w.plot({exact, approx});
 	//w.plot({error});
-
+*/
 	w.show();
 	return a.exec();
 }
