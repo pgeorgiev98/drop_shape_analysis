@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QChartView>
 #include <QDoubleSpinBox>
+#include <QComboBox>
 
 class QHBoxLayout;
 
@@ -26,5 +27,6 @@ private:
     QHBoxLayout *m_chartsLayout;
     QDoubleSpinBox *m_inputb, *m_inputd;
     QtCharts::QChartView *m_chart;
+    QComboBox *m_dropType;
 };
 #endif // MAINWINDOW_H

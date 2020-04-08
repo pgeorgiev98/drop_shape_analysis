@@ -24,7 +24,9 @@ MainWindow::MainWindow(QWidget *parent)
     , m_inputb(new QDoubleSpinBox)
     , m_inputd(new QDoubleSpinBox)
     , m_chart(new QChartView)
+    , m_dropType(new QComboBox)
 {
+    m_dropType->addItems({"Pendant", "Rotating"});
     m_chart->setMinimumSize(500, 500);
     m_inputb->setRange(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max());
     m_inputd->setRange(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max());
@@ -33,6 +35,8 @@ MainWindow::MainWindow(QWidget *parent)
     w->setLayout(m_chartsLayout);
 	setCentralWidget(w);
     QGridLayout *grid = new QGridLayout;
+    grid->addWidget(new QLabel("Drop type: "), 0, 0);
+    grid->addWidget(m_dropType, 0, 1);
     grid->addWidget(new QLabel("b: "), 1, 0);
     grid->addWidget(new QLabel("d: "), 2, 0);
     grid->setColumnStretch(1, 1);
@@ -140,24 +144,50 @@ void MainWindow::onInputButtonClicked()
     double x0 = 0, z0 = 0, phi0 = 0;
     double x1, z1, phi1;
     const double h = 0.1;
-    for (;;)
+    if(m_dropType->currentIndex() == 0)
+    {
+        for (;;)
+        {
+            drop.append(QPointF(x0, z0));
+            if (x0 > 1.0)
+                break;
+            x1 = x0 + h * cos(phi0);
+            z1 = z0 + h * sin(phi0);
+            if(x0 == 0)
+            {
+                phi1 = phi0 + h * b;
+            }
+            else
+            {
+                phi1 = phi0 + h * (2*b + d*z0 - sin(phi0)/x0);
+            }
+            x0 = x1;
+            z0 = z1;
+            phi0 = phi1;
+        }
+    }
+    else
     {
         drop.append(QPointF(x0, z0));
-        if (x0 > 1.0)
-            break;
-        x1 = x0 + h * cos(phi0);
-        z1 = z0 + h * sin(phi0);
-        if(x0 == 0)
+        for (;;)
         {
-            phi1 = phi0 + h * b;
+            x1 = x0 + h * cos(phi0);
+            z1 = z0 + h * sin(phi0);
+            if(x0 == 0)
+            {
+                phi1 = phi0 + h * b;
+            }
+            else
+            {
+                phi1 = phi0 + h * (2*b + d*x0*x0 - sin(phi0)/x0);
+            }
+            x0 = x1;
+            z0 = z1;
+            phi0 = phi1;
+            drop.append(QPointF(x0, z0));
+            if (x0 <= std::numeric_limits<double>::epsilon())
+                break;
         }
-        else
-        {
-            phi1 = phi0 + h * (2*b + d*z0 - sin(phi0)/x0);
-        }
-        x0 = x1;
-        z0 = z1;
-        phi0 = phi1;
     }
     qDebug() << "Done";
 
