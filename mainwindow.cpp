@@ -10,6 +10,7 @@
 #include <QPushButton>
 #include <QtMath>
 #include <limits>
+#include <QComboBox>
 
 #include <QDebug>
 
@@ -99,7 +100,7 @@ void MainWindow::plot(QVector<QVector<QPointF>> things)
 			series->append(p.x(), p.y());
 
         m_chart->chart()->addSeries(series);
-	}
+    }
     m_chart->chart()->legend()->hide();
     m_chart->chart()->createDefaultAxes();
     m_chart->setRenderHint(QPainter::Antialiasing);
@@ -139,9 +140,11 @@ void MainWindow::onInputButtonClicked()
     double x0 = 0, z0 = 0, phi0 = 0;
     double x1, z1, phi1;
     const double h = 0.1;
-    while(x0 <= 1)
+    for (;;)
     {
         drop.append(QPointF(x0, z0));
+        if (x0 > 1.0)
+            break;
         x1 = x0 + h * cos(phi0);
         z1 = z0 + h * sin(phi0);
         if(x0 == 0)
