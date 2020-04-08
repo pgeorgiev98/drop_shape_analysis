@@ -11,6 +11,7 @@
 #include <QtMath>
 #include <limits>
 #include <QComboBox>
+#include <QDoubleValidator>
 
 #include <QDebug>
 
@@ -21,15 +22,15 @@ static QColor colors[] = {Qt::red, Qt::green, Qt::blue, Qt::cyan, Qt::magenta};
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
     , m_chartsLayout(new QHBoxLayout)
-    , m_inputb(new QDoubleSpinBox)
-    , m_inputd(new QDoubleSpinBox)
+    , m_inputb(new QLineEdit)
+    , m_inputd(new QLineEdit)
     , m_chart(new QChartView)
     , m_dropType(new QComboBox)
 {
     m_dropType->addItems({"Pendant", "Rotating"});
     m_chart->setMinimumSize(500, 500);
-    m_inputb->setRange(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max());
-    m_inputd->setRange(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max());
+    m_inputb->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
+    m_inputd->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
     //setFixedSize(500, 500);
 	QWidget *w = new QWidget;
     w->setLayout(m_chartsLayout);
@@ -46,7 +47,9 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *button = new QPushButton("Input");
     grid->addWidget(button, 3, 0, 1, 2);
     connect(button, &QPushButton::clicked, this, &MainWindow::onInputButtonClicked);
-    m_chartsLayout->addWidget(m_chart);
+    connect(m_inputb, &QLineEdit::returnPressed, this, &MainWindow::onInputButtonClicked);
+    connect(m_inputd, &QLineEdit::returnPressed, this, &MainWindow::onInputButtonClicked);
+    m_chartsLayout->addWidget(m_chart, 1);
 }
 
 static bool expectChar(QTextStream &in, char c)
@@ -138,8 +141,8 @@ void MainWindow::onInputButtonClicked()
 {
     qDebug() << "Generating model...";
     double b, d;
-    b = m_inputb->value();
-    d = m_inputd->value();
+    b = m_inputb->text().replace(',', '.').toDouble();
+    d = m_inputd->text().replace(',', '.').toDouble();
     QVector<QPointF> drop;
     double x0 = 0, z0 = 0, phi0 = 0;
     double x1, z1, phi1;
