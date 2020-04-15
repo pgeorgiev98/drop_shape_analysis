@@ -11,6 +11,7 @@
 #include <QtMath>
 #include <limits>
 #include <QComboBox>
+#include <QFileDialog>
 
 #include <QDebug>
 
@@ -25,6 +26,8 @@ MainWindow::MainWindow(QWidget *parent)
     , m_inputd(new QDoubleSpinBox)
     , m_chart(new QChartView)
     , m_dropType(new QComboBox)
+	, m_theoreticalSeries(new QLineSeries)
+	, m_experimentalSeries(new QLineSeries)
 {
     m_dropType->addItems({"Pendant", "Rotating"});
     m_chart->setMinimumSize(500, 500);
@@ -46,7 +49,16 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *button = new QPushButton("Input");
     grid->addWidget(button, 3, 0, 1, 2);
     connect(button, &QPushButton::clicked, this, &MainWindow::onInputButtonClicked);
+    QPushButton *loadExperimentalModelButton = new QPushButton("Load experimental model");
+    grid->addWidget(loadExperimentalModelButton, 4, 0, 1, 2);
+    connect(loadExperimentalModelButton, &QPushButton::clicked, this, &MainWindow::selectExperimentalModel);
     m_chartsLayout->addWidget(m_chart);
+
+	m_chart->chart()->addSeries(m_theoreticalSeries);
+	m_chart->chart()->addSeries(m_experimentalSeries);
+	m_chart->chart()->legend()->hide();
+	m_chart->chart()->createDefaultAxes();
+	m_chart->setRenderHint(QPainter::Antialiasing);
 }
 
 static bool expectChar(QTextStream &in, char c)
@@ -56,83 +68,15 @@ static bool expectChar(QTextStream &in, char c)
 	return c == ch;
 }
 
-/*
-void MainWindow::addFile(const QString &file)
+void MainWindow::setSeries(QLineSeries *series, const QVector<QPointF> &points)
 {
-	QFile f(file);
-	if (!f.open(QIODevice::ReadOnly)) {
-		QMessageBox::critical(this, "Error", QString("Failed to open file %1: %2").arg(file).arg(f.errorString()));
-		return;
-	}
-	QTextStream in(&f);
-	Drop drop;
-	try {
-		while (!in.atEnd()) {
-			if (!expectChar(in, '{'))
-				throw;
-			double x, y;
-			in >> x;
-			if (!expectChar(in, ','))
-				throw;
-			in >> y;
-			if (!expectChar(in, '}'))
-				throw;
-			drop.m_points.append(QPointF(x, y));
-			if (y > m_height)
-				m_height = y;
-			if (!expectChar(in, ','))
-				break;
-		}
-	} catch(...) {
-		QMessageBox::critical(this, "Error", "File format error");
-		return;
-	}
-
-	m_drops.append(drop);
-	update();
-}
-*/
-
-void MainWindow::plot(QVector<QVector<QPointF>> things)
-{
-    qDebug() << "Plotting...";
-    m_chart->chart()->removeAllSeries();
-	for (auto points : things) {
-		QLineSeries *series = new QLineSeries(this);
-
-		for (auto p : points)
-			series->append(p.x(), p.y());
-
-        m_chart->chart()->addSeries(series);
-    }
-    m_chart->chart()->legend()->hide();
+    m_chart->chart()->removeSeries(series);
+    series->clear();
+	for (auto p : points)
+		series->append(p.x(), p.y());
+    m_chart->chart()->addSeries(series);
     m_chart->chart()->createDefaultAxes();
-    m_chart->setRenderHint(QPainter::Antialiasing);
-    qDebug() << "Done";
 }
-
-/*
-void MainWindow::paintEvent(QPaintEvent *)
-{
-	QPainter p(this);
-	double width = m_maxX - m_minX;
-	double height = m_maxY - m_minY;
-	p.translate(0, this->height());
-	p.scale(1, -1);
-	double scaleX = this->height() / height;
-	double scaleY = this->width() / width;
-	for (int d = 0; d < m_drops.size(); ++d) {
-		p.setPen(QPen(colors[d], 3));
-		const Drop &drop = m_drops[d];
-		for (int i = 1; i < drop.m_points.size(); ++i) {
-			QPointF p1 = drop.m_points[i - 1] - QPointF(m_minX, m_minY);
-			QPointF p2 = drop.m_points[i] - QPointF(m_minX, m_minY);
-			p.drawLine(QLineF(p1 * scaleX, p2 * scaleY));
-			qDebug() << QLineF(p1 * scaleX, p2 * scaleY);
-		}
-	}
-}
-*/
 
 void MainWindow::onInputButtonClicked()
 {
@@ -191,6 +135,46 @@ void MainWindow::onInputButtonClicked()
     }
     qDebug() << "Done";
 
-    plot({drop});
+	setSeries(m_theoreticalSeries, drop);
+}
 
+void MainWindow::selectExperimentalModel()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, "Select experimental model");
+    if (!fileName.isEmpty())
+        setExperimentalModel(fileName);
+}
+
+void MainWindow::setExperimentalModel(const QString &filePath)
+{
+    QFile f(filePath);
+    if (!f.open(QIODevice::ReadOnly)) {
+        QMessageBox::critical(this, "Error", QString("Failed to open file %1: %2").arg(filePath).arg(f.errorString()));
+        return;
+    }
+    QTextStream in(&f);
+    QVector<QPointF> points;
+    try {
+        if (!expectChar(in, '{'))
+            throw "";
+        while (!in.atEnd()) {
+            if (!expectChar(in, '{'))
+                throw "";
+            double x, y;
+            in >> x;
+            if (!expectChar(in, ','))
+                throw "";
+            in >> y;
+            if (!expectChar(in, '}'))
+                throw "";
+            points.append(QPointF(x, y));
+            if (!expectChar(in, ','))
+                break;
+        }
+    } catch(...) {
+        QMessageBox::critical(this, "Error", "File format error");
+        return;
+    }
+
+    setSeries(m_experimentalSeries, points);
 }

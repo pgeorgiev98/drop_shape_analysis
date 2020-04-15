@@ -5,6 +5,7 @@
 #include <QChartView>
 #include <QDoubleSpinBox>
 #include <QComboBox>
+#include <QLineSeries>
 
 class QHBoxLayout;
 
@@ -16,17 +17,17 @@ public:
 	MainWindow(QWidget *parent = nullptr);
 
 public slots:
-	//void addFile(const QString &file);
-	void plot(QVector<QVector<QPointF>> things);
+	void setSeries(QtCharts::QLineSeries *series, const QVector<QPointF> &points);
     void onInputButtonClicked();
-
-protected:
-	//void paintEvent(QPaintEvent *) override;
+	void selectExperimentalModel();
+	void setExperimentalModel(const QString &filePath);
 
 private:
     QHBoxLayout *m_chartsLayout;
     QDoubleSpinBox *m_inputb, *m_inputd;
     QtCharts::QChartView *m_chart;
     QComboBox *m_dropType;
+	QtCharts::QLineSeries *m_theoreticalSeries;
+	QtCharts::QLineSeries *m_experimentalSeries;
 };
 #endif // MAINWINDOW_H
