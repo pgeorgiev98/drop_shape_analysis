@@ -20,7 +20,7 @@
 using namespace QtCharts;
 
 MainWindow::MainWindow(QWidget *parent)
-	: QMainWindow(parent)
+    : QMainWindow(parent)
     , m_chartsLayout(new QHBoxLayout)
     , m_inputprecision(new QLineEdit)
     , m_inputb(new QLineEdit)
@@ -28,8 +28,8 @@ MainWindow::MainWindow(QWidget *parent)
     , m_modelChart(new QChartView)
     , m_errorChart(new QChartView)
     , m_dropType(new QComboBox)
-	, m_theoreticalSeries(new QLineSeries)
-	, m_experimentalSeries(new QLineSeries)
+    , m_theoreticalSeries(new QLineSeries)
+    , m_experimentalSeries(new QLineSeries)
     , m_errorSeries(new QLineSeries)
 {
     m_dropType->addItems({"Pendant", "Rotating"});
@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_errorChart->setMinimumSize(500, 500);
     m_inputb->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
     m_inputc->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
-	QWidget *w = new QWidget;
+    QWidget *w = new QWidget;
     w->setLayout(m_chartsLayout);
     setCentralWidget(w);
     m_inputprecision->setPlaceholderText("Default is 0.1");
@@ -102,9 +102,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 static bool expectChar(QTextStream &in, char c)
 {
-	char ch;
-	in >> ch;
-	return c == ch;
+    char ch;
+    in >> ch;
+    return c == ch;
 }
 
 void MainWindow::setSeries(QLineSeries *series, const QVector<QPointF> &points)
@@ -112,8 +112,8 @@ void MainWindow::setSeries(QLineSeries *series, const QVector<QPointF> &points)
     QChart *c = series->chart();
     c->removeSeries(series);
     series->clear();
-	for (auto p : points)
-		series->append(p.x(), p.y());
+    for (auto p : points)
+        series->append(p.x(), p.y());
     c->addSeries(series);
     c->createDefaultAxes();
 }
