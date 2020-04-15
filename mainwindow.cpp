@@ -23,13 +23,16 @@ MainWindow::MainWindow(QWidget *parent)
     , m_chartsLayout(new QHBoxLayout)
     , m_inputb(new QLineEdit)
     , m_inputc(new QLineEdit)
-    , m_chart(new QChartView)
+    , m_modelChart(new QChartView)
+    , m_errorChart(new QChartView)
     , m_dropType(new QComboBox)
 	, m_theoreticalSeries(new QLineSeries)
 	, m_experimentalSeries(new QLineSeries)
+    , m_errorSeries(new QLineSeries)
 {
     m_dropType->addItems({"Pendant", "Rotating"});
-    m_chart->setMinimumSize(500, 500);
+    m_modelChart->setMinimumSize(500, 500);
+    m_errorChart->setMinimumSize(500, 500);
     m_inputb->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
     m_inputc->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
 	QWidget *w = new QWidget;
@@ -63,13 +66,19 @@ MainWindow::MainWindow(QWidget *parent)
     grid->setRowStretch(row++, 1);
 
     m_chartsLayout->addLayout(grid);
-    m_chartsLayout->addWidget(m_chart, 1);
+    m_chartsLayout->addWidget(m_modelChart, 1);
+    m_chartsLayout->addWidget(m_errorChart, 1);
 
-	m_chart->chart()->addSeries(m_theoreticalSeries);
-	m_chart->chart()->addSeries(m_experimentalSeries);
-	m_chart->chart()->legend()->hide();
-	m_chart->chart()->createDefaultAxes();
-	m_chart->setRenderHint(QPainter::Antialiasing);
+    m_modelChart->chart()->addSeries(m_theoreticalSeries);
+    m_modelChart->chart()->addSeries(m_experimentalSeries);
+    m_modelChart->chart()->legend()->hide();
+    m_modelChart->chart()->createDefaultAxes();
+    m_modelChart->setRenderHint(QPainter::Antialiasing);
+
+    m_errorChart->chart()->addSeries(m_errorSeries);
+    m_errorChart->chart()->legend()->hide();
+    m_errorChart->chart()->createDefaultAxes();
+    m_errorChart->setRenderHint(QPainter::Antialiasing);
 
     connect(m_inputb, &QLineEdit::returnPressed, this, &MainWindow::generateTheoreticalModel);
     connect(m_inputc, &QLineEdit::returnPressed, this, &MainWindow::generateTheoreticalModel);
@@ -87,12 +96,13 @@ static bool expectChar(QTextStream &in, char c)
 
 void MainWindow::setSeries(QLineSeries *series, const QVector<QPointF> &points)
 {
-    m_chart->chart()->removeSeries(series);
+    QChart *c = series->chart();
+    c->removeSeries(series);
     series->clear();
 	for (auto p : points)
 		series->append(p.x(), p.y());
-    m_chart->chart()->addSeries(series);
-    m_chart->chart()->createDefaultAxes();
+    c->addSeries(series);
+    c->createDefaultAxes();
 }
 
 void MainWindow::generateTheoreticalModel()
@@ -152,7 +162,8 @@ void MainWindow::generateTheoreticalModel()
     }
     qDebug() << "Done";
 
-	setSeries(m_theoreticalSeries, drop);
+    setSeries(m_theoreticalSeries, drop);
+    updateErrorSeries();
 }
 
 void MainWindow::selectExperimentalModel()
@@ -194,4 +205,31 @@ void MainWindow::setExperimentalModel(const QString &filePath)
     }
 
     setSeries(m_experimentalSeries, points);
+    updateErrorSeries();
+}
+
+void MainWindow::updateErrorSeries()
+{
+    auto theoretical = m_theoreticalSeries->points();
+    auto experimental = m_experimentalSeries->points();
+
+    QVector<QPointF> error;
+
+    auto t0 = theoretical.begin(), t1 = theoretical.begin() + 1;
+    auto e = experimental.begin();
+
+    while (t1 != theoretical.end() && e != experimental.end()) {
+        while (e->x() > t1->x()) {
+            ++t0;
+            ++t1;
+        }
+        if (e->x() < t0->x())
+            continue;
+        Q_ASSERT(e->x() <= t1->x() && e->x() >= t0->x());
+        double y = t0->y() + (e->x() - t0->x()) * (t1->y() - t0->y()) / (t1->x() - t0->x());
+        error.append({e->x(), qAbs(y - e->y())});
+        ++e;
+    }
+
+    setSeries(m_errorSeries, error);
 }
