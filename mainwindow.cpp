@@ -13,6 +13,7 @@
 #include <QComboBox>
 #include <QFileDialog>
 #include <QDoubleValidator>
+#include <QSettings>
 
 #include <QDebug>
 
@@ -170,9 +171,14 @@ void MainWindow::generateTheoreticalModel()
 
 void MainWindow::selectExperimentalModel()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, "Select experimental model");
-    if (!fileName.isEmpty())
+    QSettings settings;
+    static const char *dataDirKey = "experimental-data-dir";
+    QString dir = settings.value(dataDirKey, QString()).toString();
+    QString fileName = QFileDialog::getOpenFileName(this, "Select experimental model", dir);
+    if (!fileName.isEmpty()) {
+        settings.setValue(dataDirKey, QFileInfo(fileName).dir().path());
         setExperimentalModel(fileName);
+    }
 }
 
 void MainWindow::setExperimentalModel(const QString &filePath)
