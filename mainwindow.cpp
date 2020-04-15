@@ -24,7 +24,7 @@ MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
     , m_chartsLayout(new QHBoxLayout)
     , m_inputb(new QLineEdit)
-    , m_inputd(new QLineEdit)
+    , m_inputc(new QLineEdit)
     , m_chart(new QChartView)
     , m_dropType(new QComboBox)
 	, m_theoreticalSeries(new QLineSeries)
@@ -33,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_dropType->addItems({"Pendant", "Rotating"});
     m_chart->setMinimumSize(500, 500);
     m_inputb->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
-    m_inputd->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
+    m_inputc->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
     //setFixedSize(500, 500);
 	QWidget *w = new QWidget;
     w->setLayout(m_chartsLayout);
@@ -42,10 +42,10 @@ MainWindow::MainWindow(QWidget *parent)
     grid->addWidget(new QLabel("Drop type: "), 0, 0);
     grid->addWidget(m_dropType, 0, 1);
     grid->addWidget(new QLabel("b: "), 1, 0);
-    grid->addWidget(new QLabel("d: "), 2, 0);
+    grid->addWidget(new QLabel("c: "), 2, 0);
     grid->setColumnStretch(1, 1);
     grid->addWidget(m_inputb, 1, 1);
-    grid->addWidget(m_inputd, 2, 1);
+    grid->addWidget(m_inputc, 2, 1);
     m_chartsLayout->addLayout(grid);
     QPushButton *button = new QPushButton("Input");
     grid->addWidget(button, 3, 0, 1, 2);
@@ -62,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent)
 	m_chart->setRenderHint(QPainter::Antialiasing);
 
     connect(m_inputb, &QLineEdit::returnPressed, this, &MainWindow::onInputButtonClicked);
-    connect(m_inputd, &QLineEdit::returnPressed, this, &MainWindow::onInputButtonClicked);
+    connect(m_inputc, &QLineEdit::returnPressed, this, &MainWindow::onInputButtonClicked);
 }
 
 static bool expectChar(QTextStream &in, char c)
@@ -85,9 +85,9 @@ void MainWindow::setSeries(QLineSeries *series, const QVector<QPointF> &points)
 void MainWindow::onInputButtonClicked()
 {
     qDebug() << "Generating model...";
-    double b, d;
+    double b, c;
     b = m_inputb->text().replace(',', '.').toDouble();
-    d = m_inputd->text().replace(',', '.').toDouble();
+    c = m_inputc->text().replace(',', '.').toDouble();
     QVector<QPointF> drop;
     double x0 = 0, z0 = 0, phi0 = 0;
     double x1, z1, phi1;
@@ -107,7 +107,7 @@ void MainWindow::onInputButtonClicked()
             }
             else
             {
-                phi1 = phi0 + h * (2*b + d*z0 - sin(phi0)/x0);
+                phi1 = phi0 + h * (2*b + c*z0 - sin(phi0)/x0);
             }
             x0 = x1;
             z0 = z1;
@@ -127,7 +127,7 @@ void MainWindow::onInputButtonClicked()
             }
             else
             {
-                phi1 = phi0 + h * (2*b + d*x0*x0 - sin(phi0)/x0);
+                phi1 = phi0 + h * (2*b + c*x0*x0 - sin(phi0)/x0);
             }
             x0 = x1;
             z0 = z1;
