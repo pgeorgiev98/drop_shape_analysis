@@ -69,15 +69,16 @@ MainWindow::MainWindow(QWidget *parent)
     m_chartsLayout->addWidget(m_modelChart, 1);
     m_chartsLayout->addWidget(m_errorChart, 1);
 
+    m_theoreticalSeries->setName("Theoretical model");
+    m_experimentalSeries->setName("Experimental model");
     m_modelChart->chart()->addSeries(m_theoreticalSeries);
     m_modelChart->chart()->addSeries(m_experimentalSeries);
-    m_modelChart->chart()->legend()->hide();
     m_modelChart->chart()->createDefaultAxes();
     m_modelChart->setRenderHint(QPainter::Antialiasing);
 
+    m_errorSeries->setName("Error");
     m_errorSeries->setPen(QPen(Qt::red));
     m_errorChart->chart()->addSeries(m_errorSeries);
-    m_errorChart->chart()->legend()->hide();
     m_errorChart->chart()->createDefaultAxes();
     m_errorChart->setRenderHint(QPainter::Antialiasing);
 
