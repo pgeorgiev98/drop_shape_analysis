@@ -35,21 +35,34 @@ MainWindow::MainWindow(QWidget *parent)
 	QWidget *w = new QWidget;
     w->setLayout(m_chartsLayout);
 	setCentralWidget(w);
-    QGridLayout *grid = new QGridLayout;
-    grid->addWidget(new QLabel("Drop type: "), 0, 0);
-    grid->addWidget(m_dropType, 0, 1);
-    grid->addWidget(new QLabel("b: "), 1, 0);
-    grid->addWidget(new QLabel("c: "), 2, 0);
-    grid->setColumnStretch(1, 1);
-    grid->addWidget(m_inputb, 1, 1);
-    grid->addWidget(m_inputc, 2, 1);
-    m_chartsLayout->addLayout(grid);
+
     QPushButton *generateTheoreticalModelButton = new QPushButton("Generate theoretical model");
-    grid->addWidget(generateTheoreticalModelButton, 3, 0, 1, 2);
-    connect(generateTheoreticalModelButton, &QPushButton::clicked, this, &MainWindow::generateTheoreticalModel);
     QPushButton *loadExperimentalModelButton = new QPushButton("Load experimental model");
-    grid->addWidget(loadExperimentalModelButton, 4, 0, 1, 2);
-    connect(loadExperimentalModelButton, &QPushButton::clicked, this, &MainWindow::selectExperimentalModel);
+
+    QGridLayout *grid = new QGridLayout;
+    grid->setSpacing(16);
+    int row = 0;
+
+    grid->setRowStretch(row++, 1);
+
+    grid->addWidget(new QLabel("Drop type: "), row, 0);
+    grid->addWidget(m_dropType, row, 1);
+    ++row;
+
+    grid->addWidget(new QLabel("b: "), row, 0, Qt::AlignRight);
+    grid->addWidget(m_inputb, row, 1);
+    ++row;
+
+    grid->addWidget(new QLabel("c: "), row, 0, Qt::AlignRight);
+    grid->addWidget(m_inputc, row, 1);
+    ++row;
+
+    grid->addWidget(generateTheoreticalModelButton, row++, 0, 1, 2);
+    grid->addWidget(loadExperimentalModelButton, row++, 0, 1, 2);
+
+    grid->setRowStretch(row++, 1);
+
+    m_chartsLayout->addLayout(grid);
     m_chartsLayout->addWidget(m_chart, 1);
 
 	m_chart->chart()->addSeries(m_theoreticalSeries);
@@ -60,6 +73,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(m_inputb, &QLineEdit::returnPressed, this, &MainWindow::generateTheoreticalModel);
     connect(m_inputc, &QLineEdit::returnPressed, this, &MainWindow::generateTheoreticalModel);
+
+    connect(generateTheoreticalModelButton, &QPushButton::clicked, this, &MainWindow::generateTheoreticalModel);
+    connect(loadExperimentalModelButton, &QPushButton::clicked, this, &MainWindow::selectExperimentalModel);
 }
 
 static bool expectChar(QTextStream &in, char c)
