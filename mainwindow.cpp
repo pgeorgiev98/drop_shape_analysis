@@ -75,6 +75,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_modelChart->chart()->createDefaultAxes();
     m_modelChart->setRenderHint(QPainter::Antialiasing);
 
+    m_errorSeries->setPen(QPen(Qt::red));
     m_errorChart->chart()->addSeries(m_errorSeries);
     m_errorChart->chart()->legend()->hide();
     m_errorChart->chart()->createDefaultAxes();
