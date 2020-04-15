@@ -12,6 +12,7 @@
 #include <limits>
 #include <QComboBox>
 #include <QFileDialog>
+#include <QDoubleValidator>
 
 #include <QDebug>
 
@@ -22,8 +23,8 @@ static QColor colors[] = {Qt::red, Qt::green, Qt::blue, Qt::cyan, Qt::magenta};
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
     , m_chartsLayout(new QHBoxLayout)
-    , m_inputb(new QDoubleSpinBox)
-    , m_inputd(new QDoubleSpinBox)
+    , m_inputb(new QLineEdit)
+    , m_inputd(new QLineEdit)
     , m_chart(new QChartView)
     , m_dropType(new QComboBox)
 	, m_theoreticalSeries(new QLineSeries)
@@ -31,8 +32,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     m_dropType->addItems({"Pendant", "Rotating"});
     m_chart->setMinimumSize(500, 500);
-    m_inputb->setRange(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max());
-    m_inputd->setRange(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max());
+    m_inputb->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
+    m_inputd->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
     //setFixedSize(500, 500);
 	QWidget *w = new QWidget;
     w->setLayout(m_chartsLayout);
@@ -52,13 +53,16 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *loadExperimentalModelButton = new QPushButton("Load experimental model");
     grid->addWidget(loadExperimentalModelButton, 4, 0, 1, 2);
     connect(loadExperimentalModelButton, &QPushButton::clicked, this, &MainWindow::selectExperimentalModel);
-    m_chartsLayout->addWidget(m_chart);
+    m_chartsLayout->addWidget(m_chart, 1);
 
 	m_chart->chart()->addSeries(m_theoreticalSeries);
 	m_chart->chart()->addSeries(m_experimentalSeries);
 	m_chart->chart()->legend()->hide();
 	m_chart->chart()->createDefaultAxes();
 	m_chart->setRenderHint(QPainter::Antialiasing);
+
+    connect(m_inputb, &QLineEdit::returnPressed, this, &MainWindow::onInputButtonClicked);
+    connect(m_inputd, &QLineEdit::returnPressed, this, &MainWindow::onInputButtonClicked);
 }
 
 static bool expectChar(QTextStream &in, char c)
@@ -82,8 +86,8 @@ void MainWindow::onInputButtonClicked()
 {
     qDebug() << "Generating model...";
     double b, d;
-    b = m_inputb->value();
-    d = m_inputd->value();
+    b = m_inputb->text().replace(',', '.').toDouble();
+    d = m_inputd->text().replace(',', '.').toDouble();
     QVector<QPointF> drop;
     double x0 = 0, z0 = 0, phi0 = 0;
     double x1, z1, phi1;
