@@ -1,0 +1,5 @@
+ pendant_drop_1: b = 1.843658; c = -2.900
+ pendant_drop_2: b = 1.574803; c = -2.400
+ pendant_drop_3: b = 2.064410; c = -2.400
+rotating_drop_1: b = 1.504438; c = -1.873
+rotating_drop_2: b = 1.926040; c = -4.214
