@@ -131,9 +131,13 @@ void MainWindow::generateTheoreticalModel()
     double h = m_inputprecision->text().replace(',', '.').toDouble(&precisionValid);
     if (!precisionValid)
         h = 0.1;
+
+    const int maxIterations = 2000000;
+    int iteration;
+
     if(m_dropType->currentIndex() == 0)
     {
-        for (;;)
+        for (iteration = 0; iteration < maxIterations; ++iteration)
         {
             drop.append(QPointF(x0, z0));
             if (x0 > 1.0)
@@ -156,7 +160,7 @@ void MainWindow::generateTheoreticalModel()
     else
     {
         drop.append(QPointF(x0, z0));
-        for (;;)
+        for (iteration = 0; iteration < maxIterations; ++iteration)
         {
             x1 = x0 + h * cos(phi0);
             z1 = z0 + h * sin(phi0);
@@ -177,6 +181,11 @@ void MainWindow::generateTheoreticalModel()
         }
     }
     qDebug() << "Done";
+
+    if (iteration >= maxIterations) {
+        QMessageBox::critical(this, "Error", "Maximum number of iterations reached");
+        return;
+    }
 
     setSeries(m_theoreticalSeries, drop);
     updateErrorSeries();
