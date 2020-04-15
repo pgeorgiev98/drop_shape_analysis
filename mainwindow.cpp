@@ -47,9 +47,9 @@ MainWindow::MainWindow(QWidget *parent)
     grid->addWidget(m_inputb, 1, 1);
     grid->addWidget(m_inputc, 2, 1);
     m_chartsLayout->addLayout(grid);
-    QPushButton *button = new QPushButton("Input");
-    grid->addWidget(button, 3, 0, 1, 2);
-    connect(button, &QPushButton::clicked, this, &MainWindow::onInputButtonClicked);
+    QPushButton *generateTheoreticalModelButton = new QPushButton("Generate theoretical model");
+    grid->addWidget(generateTheoreticalModelButton, 3, 0, 1, 2);
+    connect(generateTheoreticalModelButton, &QPushButton::clicked, this, &MainWindow::generateTheoreticalModel);
     QPushButton *loadExperimentalModelButton = new QPushButton("Load experimental model");
     grid->addWidget(loadExperimentalModelButton, 4, 0, 1, 2);
     connect(loadExperimentalModelButton, &QPushButton::clicked, this, &MainWindow::selectExperimentalModel);
@@ -61,8 +61,8 @@ MainWindow::MainWindow(QWidget *parent)
 	m_chart->chart()->createDefaultAxes();
 	m_chart->setRenderHint(QPainter::Antialiasing);
 
-    connect(m_inputb, &QLineEdit::returnPressed, this, &MainWindow::onInputButtonClicked);
-    connect(m_inputc, &QLineEdit::returnPressed, this, &MainWindow::onInputButtonClicked);
+    connect(m_inputb, &QLineEdit::returnPressed, this, &MainWindow::generateTheoreticalModel);
+    connect(m_inputc, &QLineEdit::returnPressed, this, &MainWindow::generateTheoreticalModel);
 }
 
 static bool expectChar(QTextStream &in, char c)
@@ -82,7 +82,7 @@ void MainWindow::setSeries(QLineSeries *series, const QVector<QPointF> &points)
     m_chart->chart()->createDefaultAxes();
 }
 
-void MainWindow::onInputButtonClicked()
+void MainWindow::generateTheoreticalModel()
 {
     qDebug() << "Generating model...";
     double b, c;

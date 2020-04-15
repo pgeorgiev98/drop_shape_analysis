@@ -18,7 +18,7 @@ public:
 
 public slots:
 	void setSeries(QtCharts::QLineSeries *series, const QVector<QPointF> &points);
-    void onInputButtonClicked();
+    void generateTheoreticalModel();
 	void selectExperimentalModel();
 	void setExperimentalModel(const QString &filePath);
 
