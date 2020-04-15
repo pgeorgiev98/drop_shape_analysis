@@ -21,6 +21,7 @@ using namespace QtCharts;
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
     , m_chartsLayout(new QHBoxLayout)
+    , m_inputprecision(new QLineEdit)
     , m_inputb(new QLineEdit)
     , m_inputc(new QLineEdit)
     , m_modelChart(new QChartView)
@@ -37,7 +38,12 @@ MainWindow::MainWindow(QWidget *parent)
     m_inputc->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
 	QWidget *w = new QWidget;
     w->setLayout(m_chartsLayout);
-	setCentralWidget(w);
+    setCentralWidget(w);
+    m_inputprecision->setPlaceholderText("Default is 0.1");
+    m_inputprecision->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
+    m_inputb->setAlignment(Qt::AlignRight);
+    m_inputc->setAlignment(Qt::AlignRight);
+    m_inputprecision->setAlignment(Qt::AlignRight);
 
     QPushButton *generateTheoreticalModelButton = new QPushButton("Generate theoretical model");
     QPushButton *loadExperimentalModelButton = new QPushButton("Load experimental model");
@@ -50,6 +56,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     grid->addWidget(new QLabel("Drop type: "), row, 0);
     grid->addWidget(m_dropType, row, 1);
+    ++row;
+
+    grid->addWidget(new QLabel("precision: "), row, 0, Qt::AlignRight);
+    grid->addWidget(m_inputprecision, row, 1);
     ++row;
 
     grid->addWidget(new QLabel("b: "), row, 0, Qt::AlignRight);
@@ -116,7 +126,10 @@ void MainWindow::generateTheoreticalModel()
     QVector<QPointF> drop;
     double x0 = 0, z0 = 0, phi0 = 0;
     double x1, z1, phi1;
-    const double h = 0.1;
+    bool precisionValid;
+    double h = m_inputprecision->text().replace(',', '.').toDouble(&precisionValid);
+    if (!precisionValid)
+        h = 0.1;
     if(m_dropType->currentIndex() == 0)
     {
         for (;;)
