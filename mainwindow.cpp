@@ -18,8 +18,6 @@
 
 using namespace QtCharts;
 
-static QColor colors[] = {Qt::red, Qt::green, Qt::blue, Qt::cyan, Qt::magenta};
-
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
     , m_chartsLayout(new QHBoxLayout)
@@ -34,7 +32,6 @@ MainWindow::MainWindow(QWidget *parent)
     m_chart->setMinimumSize(500, 500);
     m_inputb->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
     m_inputc->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
-    //setFixedSize(500, 500);
 	QWidget *w = new QWidget;
     w->setLayout(m_chartsLayout);
 	setCentralWidget(w);
