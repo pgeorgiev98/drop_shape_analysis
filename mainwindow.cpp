@@ -215,6 +215,11 @@ void MainWindow::updateErrorSeries()
     auto theoretical = m_theoreticalSeries->points();
     auto experimental = m_experimentalSeries->points();
 
+    if (theoretical.size() < 2 || experimental.isEmpty()) {
+        setSeries(m_errorSeries, {});
+        return;
+    }
+
     QVector<QPointF> error;
 
     auto t0 = theoretical.begin(), t1 = theoretical.begin() + 1;
