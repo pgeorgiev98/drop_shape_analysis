@@ -14,7 +14,7 @@
 #include <QFileDialog>
 #include <QDoubleValidator>
 #include <QSettings>
-
+#include <QList>
 #include <QDebug>
 
 using namespace QtCharts;
@@ -116,6 +116,14 @@ void MainWindow::setSeries(QLineSeries *series, const QVector<QPointF> &points)
         series->append(p.x(), p.y());
     c->addSeries(series);
     c->createDefaultAxes();
+    QList<QAbstractAxis*> axesX= m_modelChart->chart()->axes(Qt::Horizontal);
+    QList<QAbstractAxis*> axesY= m_modelChart->chart()->axes(Qt::Vertical);
+
+    for(auto axisX : axesX)
+        axisX->setRange(0, 1);
+
+    for(auto axisY : axesY)
+        axisY->setMin(0);
 }
 
 void MainWindow::generateTheoreticalModel()
