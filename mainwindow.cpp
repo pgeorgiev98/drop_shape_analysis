@@ -195,6 +195,8 @@ void MainWindow::setExperimentalModel(const QString &filePath)
     setSeries(m_experimentalSeries, points);
     m_currentExperimentalModel = points;
     updateErrorSeries();
+
+    minimizeError();
 }
 
 void MainWindow::updateErrorSeries()
@@ -298,6 +300,9 @@ QVector<QPointF> MainWindow::generateError(const QVector<QPointF> &theoretical, 
 
 double MainWindow::calculateError(const QVector<QPointF> &error)
 {
+    if(error.isEmpty())
+        return qInf();
+
     double errorAcc = 0;
     for(auto point : error)
     {
@@ -305,4 +310,55 @@ double MainWindow::calculateError(const QVector<QPointF> &error)
     }
 
     return errorAcc;
+}
+
+void MainWindow::minimizeError()
+{
+    qDebug() << "In minimizeError()";
+    const double b = 1.843;
+    double c = -2, cNext;
+    const double gdPrecision = 1e-3;
+    DropType dropType = m_dropType->currentIndex() == 0 ? DropType::PENDANT : DropType::SPINNING;
+    bool precisionValid;
+    double precision = m_inputprecision->text().replace(',', '.').toDouble(&precisionValid);
+    if (!precisionValid)
+        precision = 0.1;
+
+    auto f = [this, b, dropType, precision](double c){
+        return calculateError(generateError(generateTheoreticalModel(b, c, dropType, precision), m_currentExperimentalModel));
+    };
+
+    auto der = [f](double c){
+        const double h = 0.001;
+        return (f(c + h) - f(c)) / h;
+    };
+
+
+    int steps = 0;
+    while(steps <= 10000)
+    {
+        double alpha = 1;
+
+        do
+        {
+            cNext = c -alpha*der(c);
+            alpha /= 2;
+
+            if(qAbs(cNext - c) <= gdPrecision)
+                break;
+        } while(f(c) <= f(cNext));
+
+        if(qAbs(cNext - c) <= gdPrecision)
+            break;
+
+        c = cNext;
+        ++steps;
+
+        qDebug() << "step: " << steps << " c: " << c;
+    }
+
+    qDebug() << "minimizeError completed after" << steps << "steps";
+    qDebug() << "b =" << b << "c =" << cNext; // Or just c?
+    qDebug() << "prev c = " << c;
+    qDebug() << "f(c) = " << f(cNext);
 }

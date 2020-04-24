@@ -36,6 +36,8 @@ private:
     enum class DropType {PENDANT, SPINNING};
     static QVector<QPointF> generateTheoreticalModel(double b, double c, DropType type, double precision);
     static QVector<QPointF> generateError(const QVector<QPointF> &theoretical, const QVector<QPointF> &experimental);
+    static double calculateError(const QVector<QPointF> &error);
+    void minimizeError();
 
 };
 #endif // MAINWINDOW_H
