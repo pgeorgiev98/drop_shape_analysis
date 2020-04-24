@@ -46,7 +46,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_inputc->setAlignment(Qt::AlignRight);
     m_inputprecision->setAlignment(Qt::AlignRight);
 
-    QPushButton *generateTheoreticalModelButton = new QPushButton("Generate theoretical model");
+    QPushButton *visualiseTheoreticalModelButton = new QPushButton("Visualise theoretical model");
     QPushButton *loadExperimentalModelButton = new QPushButton("Load experimental model");
 
     QGridLayout *grid = new QGridLayout;
@@ -71,7 +71,7 @@ MainWindow::MainWindow(QWidget *parent)
     grid->addWidget(m_inputc, row, 1);
     ++row;
 
-    grid->addWidget(generateTheoreticalModelButton, row++, 0, 1, 2);
+    grid->addWidget(visualiseTheoreticalModelButton, row++, 0, 1, 2);
     grid->addWidget(loadExperimentalModelButton, row++, 0, 1, 2);
 
     grid->setRowStretch(row++, 1);
@@ -93,10 +93,10 @@ MainWindow::MainWindow(QWidget *parent)
     m_errorChart->chart()->createDefaultAxes();
     m_errorChart->setRenderHint(QPainter::Antialiasing);
 
-    connect(m_inputb, &QLineEdit::returnPressed, this, &MainWindow::generateTheoreticalModel);
-    connect(m_inputc, &QLineEdit::returnPressed, this, &MainWindow::generateTheoreticalModel);
+    connect(m_inputb, &QLineEdit::returnPressed, this, &MainWindow::visualiseTheoreticalModel);
+    connect(m_inputc, &QLineEdit::returnPressed, this, &MainWindow::visualiseTheoreticalModel);
 
-    connect(generateTheoreticalModelButton, &QPushButton::clicked, this, &MainWindow::generateTheoreticalModel);
+    connect(visualiseTheoreticalModelButton, &QPushButton::clicked, this, &MainWindow::visualiseTheoreticalModel);
     connect(loadExperimentalModelButton, &QPushButton::clicked, this, &MainWindow::selectExperimentalModel);
 }
 
@@ -126,76 +126,26 @@ void MainWindow::setSeries(QLineSeries *series, const QVector<QPointF> &points)
         axisY->setMin(0);
 }
 
-void MainWindow::generateTheoreticalModel()
+void MainWindow::visualiseTheoreticalModel()
 {
-    qDebug() << "Generating model...";
     double b, c;
     b = m_inputb->text().replace(',', '.').toDouble();
     c = m_inputc->text().replace(',', '.').toDouble();
-    QVector<QPointF> drop;
-    double x0 = 0, z0 = 0, phi0 = 0;
-    double x1, z1, phi1;
     bool precisionValid;
     double h = m_inputprecision->text().replace(',', '.').toDouble(&precisionValid);
     if (!precisionValid)
         h = 0.1;
 
-    const int maxIterations = 2000000;
-    int iteration;
+    DropType dropType = m_dropType->currentIndex() == 0 ? DropType::PENDANT : DropType::SPINNING;
 
-    if(m_dropType->currentIndex() == 0)
+    auto drop = generateTheoreticalModel(b, c, dropType, h);
+    if(drop.isEmpty())
     {
-        for (iteration = 0; iteration < maxIterations; ++iteration)
-        {
-            drop.append(QPointF(x0, z0));
-            if (x0 > 1.0)
-                break;
-            x1 = x0 + h * cos(phi0);
-            z1 = z0 + h * sin(phi0);
-            if(x0 == 0)
-            {
-                phi1 = phi0 + h * b;
-            }
-            else
-            {
-                phi1 = phi0 + h * (2*b + c*z0 - sin(phi0)/x0);
-            }
-            x0 = x1;
-            z0 = z1;
-            phi0 = phi1;
-        }
-    }
-    else
-    {
-        drop.append(QPointF(x0, z0));
-        for (iteration = 0; iteration < maxIterations; ++iteration)
-        {
-            x1 = x0 + h * cos(phi0);
-            z1 = z0 + h * sin(phi0);
-            if(x0 == 0)
-            {
-                phi1 = phi0 + h * b;
-            }
-            else
-            {
-                phi1 = phi0 + h * (2*b + c*x0*x0 - sin(phi0)/x0);
-            }
-            x0 = x1;
-            z0 = z1;
-            phi0 = phi1;
-            drop.append(QPointF(x0, z0));
-            if (x0 <= std::numeric_limits<double>::epsilon())
-                break;
-        }
-    }
-    qDebug() << "Done";
-
-    if (iteration >= maxIterations) {
         QMessageBox::critical(this, "Error", "Maximum number of iterations reached");
         return;
     }
-
     setSeries(m_theoreticalSeries, drop);
+    m_currentTheoreticalModel = drop;
     updateErrorSeries();
 }
 
@@ -243,17 +193,86 @@ void MainWindow::setExperimentalModel(const QString &filePath)
     }
 
     setSeries(m_experimentalSeries, points);
+    m_currentExperimentalModel = points;
     updateErrorSeries();
 }
 
 void MainWindow::updateErrorSeries()
 {
-    auto theoretical = m_theoreticalSeries->points();
-    auto experimental = m_experimentalSeries->points();
+    auto theoretical = m_currentTheoreticalModel;
+    auto experimental = m_currentExperimentalModel;
 
+    auto error = generateError(theoretical, experimental);
+    setSeries(m_errorSeries, error);
+}
+
+QVector<QPointF> MainWindow::generateTheoreticalModel(double b, double c, DropType type, double precision)
+{
+    QVector<QPointF> drop;
+    double x0 = 0, z0 = 0, phi0 = 0;
+    double x1, z1, phi1;
+    double h = precision;
+
+    const int maxIterations = 2000000;
+    int iteration;
+
+    if(type == DropType::PENDANT)
+    {
+        for (iteration = 0; iteration < maxIterations; ++iteration)
+        {
+            drop.append(QPointF(x0, z0));
+            if (x0 > 1.0)
+                break;
+            x1 = x0 + h * cos(phi0);
+            z1 = z0 + h * sin(phi0);
+            if(x0 == 0)
+            {
+                phi1 = phi0 + h * b;
+            }
+            else
+            {
+                phi1 = phi0 + h * (2*b + c*z0 - sin(phi0)/x0);
+            }
+            x0 = x1;
+            z0 = z1;
+            phi0 = phi1;
+        }
+    }
+    else
+    {
+        drop.append(QPointF(x0, z0));
+        for (iteration = 0; iteration < maxIterations; ++iteration)
+        {
+            x1 = x0 + h * cos(phi0);
+            z1 = z0 + h * sin(phi0);
+            if(x0 == 0)
+            {
+                phi1 = phi0 + h * b;
+            }
+            else
+            {
+                phi1 = phi0 + h * (2*b + c*x0*x0 - sin(phi0)/x0);
+            }
+            x0 = x1;
+            z0 = z1;
+            phi0 = phi1;
+            drop.append(QPointF(x0, z0));
+            if (x0 <= std::numeric_limits<double>::epsilon())
+                break;
+        }
+    }
+
+    if (iteration >= maxIterations) {
+        return {};
+    }
+
+    return drop;
+}
+
+QVector<QPointF> MainWindow::generateError(const QVector<QPointF> &theoretical, const QVector<QPointF> &experimental)
+{
     if (theoretical.size() < 2 || experimental.isEmpty()) {
-        setSeries(m_errorSeries, {});
-        return;
+        return {};
     }
 
     QVector<QPointF> error;
@@ -274,5 +293,16 @@ void MainWindow::updateErrorSeries()
         ++e;
     }
 
-    setSeries(m_errorSeries, error);
+    return error;
+}
+
+double MainWindow::calculateError(const QVector<QPointF> &error)
+{
+    double errorAcc = 0;
+    for(auto point : error)
+    {
+        errorAcc += point.y() * point.y();
+    }
+
+    return errorAcc;
 }
