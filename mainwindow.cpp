@@ -32,16 +32,18 @@ MainWindow::MainWindow(QWidget *parent)
     , m_experimentalSeries(new QLineSeries)
     , m_errorSeries(new QLineSeries)
 {
+    const double minDouble = std::numeric_limits<double>::lowest();
+    const double maxDouble = std::numeric_limits<double>::max();
     m_dropType->addItems({"Pendant", "Rotating"});
     m_modelChart->setMinimumSize(500, 500);
     m_errorChart->setMinimumSize(500, 500);
-    m_inputb->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
-    m_inputc->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
+    m_inputb->setValidator(new QDoubleValidator(minDouble, maxDouble, 1000));
+    m_inputc->setValidator(new QDoubleValidator(minDouble, maxDouble, 1000));
     QWidget *w = new QWidget;
     w->setLayout(m_chartsLayout);
     setCentralWidget(w);
     m_inputprecision->setPlaceholderText("Default is 0.1");
-    m_inputprecision->setValidator(new QDoubleValidator(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), 1000));
+    m_inputprecision->setValidator(new QDoubleValidator(minDouble, maxDouble, 1000));
     m_inputb->setAlignment(Qt::AlignRight);
     m_inputc->setAlignment(Qt::AlignRight);
     m_inputprecision->setAlignment(Qt::AlignRight);
