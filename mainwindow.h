@@ -19,6 +19,7 @@ public:
 public slots:
     void setSeries(QtCharts::QLineSeries *series, const QVector<QPointF> &points);
     void visualiseTheoreticalModel();
+    void visualiseClosestTheoreticalModel();
     void selectExperimentalModel();
     void setExperimentalModel(const QString &filePath);
     void updateErrorSeries();
@@ -37,7 +38,19 @@ private:
     static QVector<QPointF> generateTheoreticalModel(double b, double c, DropType type, double precision);
     static QVector<QPointF> generateError(const QVector<QPointF> &theoretical, const QVector<QPointF> &experimental);
     static double calculateError(const QVector<QPointF> &error);
-    void minimizeError();
+
+    struct TheoreticalModelParameters
+    {
+        DropType dropType;
+        double b, c;
+        double precision;
+
+        TheoreticalModelParameters(DropType dropType, double b, double c, double precision)
+            : dropType(dropType), b(b), c(c), precision(precision)
+        {}
+    };
+
+    TheoreticalModelParameters minimizeError();
 
 };
 #endif // MAINWINDOW_H

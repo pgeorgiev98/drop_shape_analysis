@@ -48,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     QPushButton *visualiseTheoreticalModelButton = new QPushButton("Visualise theoretical model");
     QPushButton *loadExperimentalModelButton = new QPushButton("Load experimental model");
+    QPushButton *generateClosestModelButton = new QPushButton("Generate closest theoretical model");
 
     QGridLayout *grid = new QGridLayout;
     grid->setSpacing(16);
@@ -73,6 +74,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     grid->addWidget(visualiseTheoreticalModelButton, row++, 0, 1, 2);
     grid->addWidget(loadExperimentalModelButton, row++, 0, 1, 2);
+    grid->addWidget(generateClosestModelButton, row++, 0, 1, 2);
 
     grid->setRowStretch(row++, 1);
 
@@ -98,6 +100,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(visualiseTheoreticalModelButton, &QPushButton::clicked, this, &MainWindow::visualiseTheoreticalModel);
     connect(loadExperimentalModelButton, &QPushButton::clicked, this, &MainWindow::selectExperimentalModel);
+    connect(generateClosestModelButton, &QPushButton::clicked, this, &MainWindow::visualiseClosestTheoreticalModel);
 }
 
 static bool expectChar(QTextStream &in, char c)
@@ -149,6 +152,21 @@ void MainWindow::visualiseTheoreticalModel()
     updateErrorSeries();
 }
 
+void MainWindow::visualiseClosestTheoreticalModel()
+{
+    if (m_currentExperimentalModel.isEmpty()) {
+        QMessageBox::information(this, "Select experimental model", "An experimental model must be loaded first");
+        return;
+    }
+
+    TheoreticalModelParameters parameters = minimizeError();
+    m_dropType->setCurrentIndex(parameters.dropType == DropType::PENDANT ? 0 : 1);
+    m_inputb->setText(QString::number(parameters.b));
+    m_inputc->setText(QString::number(parameters.c));
+    m_inputprecision->setText(QString::number(parameters.precision));
+    visualiseTheoreticalModel();
+}
+
 void MainWindow::selectExperimentalModel()
 {
     QSettings settings;
@@ -195,8 +213,6 @@ void MainWindow::setExperimentalModel(const QString &filePath)
     setSeries(m_experimentalSeries, points);
     m_currentExperimentalModel = points;
     updateErrorSeries();
-
-    minimizeError();
 }
 
 void MainWindow::updateErrorSeries()
@@ -312,7 +328,7 @@ double MainWindow::calculateError(const QVector<QPointF> &error)
     return errorAcc;
 }
 
-void MainWindow::minimizeError()
+MainWindow::TheoreticalModelParameters MainWindow::minimizeError()
 {
     qDebug() << "In minimizeError()";
     const double b = 1.843;
@@ -361,4 +377,5 @@ void MainWindow::minimizeError()
     qDebug() << "b =" << b << "c =" << cNext; // Or just c?
     qDebug() << "prev c = " << c;
     qDebug() << "f(c) = " << f(cNext);
+    return TheoreticalModelParameters(dropType, b, c, precision);
 }
