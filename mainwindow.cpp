@@ -353,7 +353,7 @@ MainWindow::TheoreticalModelParameters MainWindow::minimizeError()
     int steps = 0;
     while(steps <= 10000)
     {
-        double alpha = 1;
+        double alpha = 0.1;
 
         do
         {
