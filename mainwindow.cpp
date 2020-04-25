@@ -12,6 +12,7 @@
 #include <limits>
 #include <QComboBox>
 #include <QFileDialog>
+#include <QGroupBox>
 #include <QDoubleValidator>
 #include <QSettings>
 #include <QList>
@@ -54,29 +55,48 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *loadExperimentalModelButton = new QPushButton("Load experimental model");
     QPushButton *generateClosestModelButton = new QPushButton("Generate closest theoretical model");
 
+    QGroupBox *calculationSettingsBox = new QGroupBox("Calculation settings");
+    QGroupBox *theoreticalModelBox = new QGroupBox("Theoretical model");
+
+    {
+        QGridLayout *l = new QGridLayout;
+        calculationSettingsBox->setLayout(l);
+
+        int row = 0;
+        l->addWidget(new QLabel("Drop type: "), row, 0);
+        l->addWidget(m_dropType, row, 1);
+        ++row;
+
+        l->addWidget(new QLabel("Precision: "), row, 0, Qt::AlignRight);
+        l->addWidget(m_inputprecision, row, 1);
+        ++row;
+    }
+
+    {
+        QGridLayout *l = new QGridLayout;
+        theoreticalModelBox->setLayout(l);
+
+        int row = 0;
+        l->addWidget(new QLabel("b: "), row, 0, Qt::AlignRight);
+        l->addWidget(m_inputb, row, 1);
+        ++row;
+
+        l->addWidget(new QLabel("c: "), row, 0, Qt::AlignRight);
+        l->addWidget(m_inputc, row, 1);
+        ++row;
+
+        l->addWidget(visualiseTheoreticalModelButton, row++, 0, 1, 2);
+    }
+
     QGridLayout *grid = new QGridLayout;
     grid->setSpacing(16);
     int row = 0;
 
     grid->setRowStretch(row++, 1);
 
-    grid->addWidget(new QLabel("Drop type: "), row, 0);
-    grid->addWidget(m_dropType, row, 1);
-    ++row;
+    grid->addWidget(calculationSettingsBox, row++, 0, 1, 2);
+    grid->addWidget(theoreticalModelBox, row++, 0, 1, 2);
 
-    grid->addWidget(new QLabel("precision: "), row, 0, Qt::AlignRight);
-    grid->addWidget(m_inputprecision, row, 1);
-    ++row;
-
-    grid->addWidget(new QLabel("b: "), row, 0, Qt::AlignRight);
-    grid->addWidget(m_inputb, row, 1);
-    ++row;
-
-    grid->addWidget(new QLabel("c: "), row, 0, Qt::AlignRight);
-    grid->addWidget(m_inputc, row, 1);
-    ++row;
-
-    grid->addWidget(visualiseTheoreticalModelButton, row++, 0, 1, 2);
     grid->addWidget(loadExperimentalModelButton, row++, 0, 1, 2);
     grid->addWidget(generateClosestModelButton, row++, 0, 1, 2);
 
