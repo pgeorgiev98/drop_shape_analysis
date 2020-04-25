@@ -8,6 +8,7 @@
 #include <QLineSeries>
 
 class QHBoxLayout;
+class QLabel;
 
 class MainWindow : public QMainWindow
 {
@@ -27,6 +28,7 @@ public slots:
 private:
     QHBoxLayout *m_chartsLayout;
     QLineEdit *m_inputprecision, *m_inputb, *m_inputc;
+    QLabel *m_modelErrorLabel;
     QtCharts::QChartView *m_modelChart, *m_errorChart;
     QComboBox *m_dropType;
     QtCharts::QLineSeries *m_theoreticalSeries;

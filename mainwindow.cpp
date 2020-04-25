@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_inputprecision(new QLineEdit)
     , m_inputb(new QLineEdit)
     , m_inputc(new QLineEdit)
+    , m_modelErrorLabel(new QLabel)
     , m_modelChart(new QChartView)
     , m_errorChart(new QChartView)
     , m_dropType(new QComboBox)
@@ -47,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_inputb->setAlignment(Qt::AlignRight);
     m_inputc->setAlignment(Qt::AlignRight);
     m_inputprecision->setAlignment(Qt::AlignRight);
+    m_modelErrorLabel->setAlignment(Qt::AlignHCenter);
 
     QPushButton *visualiseTheoreticalModelButton = new QPushButton("Visualise theoretical model");
     QPushButton *loadExperimentalModelButton = new QPushButton("Load experimental model");
@@ -79,6 +81,8 @@ MainWindow::MainWindow(QWidget *parent)
     grid->addWidget(generateClosestModelButton, row++, 0, 1, 2);
 
     grid->setRowStretch(row++, 1);
+
+    grid->addWidget(m_modelErrorLabel, row++, 0, 1, 2);
 
     m_chartsLayout->addLayout(grid);
     m_chartsLayout->addWidget(m_modelChart, 1);
@@ -224,6 +228,12 @@ void MainWindow::updateErrorSeries()
 
     auto error = generateError(theoretical, experimental);
     setSeries(m_errorSeries, error);
+    if (!error.isEmpty()) {
+        double errorValue = calculateError(error);
+        m_modelErrorLabel->setText(QString("Squared error: %1").arg(errorValue));
+    } else {
+        m_modelErrorLabel->setText(QString());
+    }
 }
 
 QVector<QPointF> MainWindow::generateTheoreticalModel(double b, double c, DropType type, double precision)
