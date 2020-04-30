@@ -16,6 +16,7 @@
 #include <QDoubleValidator>
 #include <QSettings>
 #include <QList>
+#include <QQueue>
 #include <QDebug>
 
 using namespace QtCharts;
@@ -263,7 +264,7 @@ QVector<QPointF> MainWindow::generateTheoreticalModel(double b, double c, DropTy
     double x1, z1, phi1;
     double h = precision;
 
-    const int maxIterations = 2000000;
+    const int maxIterations = 20000;
     int iteration;
 
     if(type == DropType::PENDANT)
@@ -423,8 +424,20 @@ double MainWindow::calculateError(const QVector<QPointF> &theoretical, const QVe
 MainWindow::TheoreticalModelParameters MainWindow::minimizeError()
 {
     qDebug() << "In minimizeError()";
-    const double b = 1.843;
-    double c = -2, cNext;
+    const double minB =  0.5, maxB =  3.0;
+    const double minC = -6.0, maxC = -0.5;
+
+    QQueue<QPair<double, double>> queue;
+
+    const int tableSize = 10;
+    for (int i = 0; i < tableSize; ++i) {
+        for (int j = 0; j < tableSize; ++j) {
+            double b = minB + i * (maxB - minB) / tableSize;
+            double c = minC + j * (maxC - minC) / tableSize;
+            queue.enqueue({b, c});
+        }
+    }
+
     const double gdPrecision = 1e-3;
     DropType dropType = m_dropType->currentIndex() == 0 ? DropType::PENDANT : DropType::SPINNING;
     bool precisionValid;
@@ -432,42 +445,59 @@ MainWindow::TheoreticalModelParameters MainWindow::minimizeError()
     if (!precisionValid)
         precision = 0.1;
 
-    auto f = [this, b, dropType, precision](double c){
-        return calculateError(generateTheoreticalModel(b, c, dropType, precision), m_currentExperimentalModel);
-    };
+    TheoreticalModelParameters bestParameters(dropType, 0, 0, precision);
+    double bestError = qInf();
 
-    auto der = [f](double c){
-        const double h = 0.001;
-        return (f(c + h) - f(c)) / h;
-    };
+    while (!queue.isEmpty()) {
+        auto p = queue.dequeue();
+        const double b = p.first;
+        double c = p.second;
+        qDebug().nospace() << "Solving with b = " << b << " c = " << c << ") (" << tableSize * tableSize - queue.size() << "/" << tableSize * tableSize << ")";
+
+        auto f = [this, b, dropType, precision](double c){
+            return calculateError(generateTheoreticalModel(b, c, dropType, precision), m_currentExperimentalModel);
+        };
+
+        auto der = [f](double c){
+            const double h = 0.001;
+            return (f(c + h) - f(c)) / h;
+        };
 
 
-    int steps = 0;
-    while(steps <= 10000)
-    {
-        double alpha = 0.1;
-
-        do
+        double cNext;
+        int steps = 0;
+        const int maxSteps = 1000;
+        while(steps < maxSteps)
         {
-            cNext = c -alpha*der(c);
-            alpha /= 2;
+            double alpha = 0.1;
 
-            if(qAbs(cNext - c) <= gdPrecision)
+            double fc, fcn;
+            do
+            {
+                cNext = c -alpha*der(c);
+                alpha /= 2;
+
+                fc = f(c);
+                fcn = f(cNext);
+
+                ++steps;
+            } while(fc <= fcn && qAbs(cNext - c) > gdPrecision && !(qIsInf(fc) && qIsInf(fcn)) && steps < maxSteps);
+
+            if(qAbs(cNext - c) <= gdPrecision || (qIsInf(fc) && qIsInf(fcn)))
                 break;
-        } while(f(c) <= f(cNext));
 
-        if(qAbs(cNext - c) <= gdPrecision)
-            break;
-
+            c = cNext;
+        }
         c = cNext;
-        ++steps;
 
-        qDebug() << "step: " << steps << " c: " << c;
+        double error = f(c);
+        qDebug() << "Completed after" << steps << "steps; b =" << b << "c =" << c << "error =" << error;
+        if (error < bestError) {
+            bestParameters.c = c;
+            bestParameters.b = b;
+            bestError = error;
+        }
     }
 
-    qDebug() << "minimizeError completed after" << steps << "steps";
-    qDebug() << "b =" << b << "c =" << cNext; // Or just c?
-    qDebug() << "prev c = " << c;
-    qDebug() << "f(c) = " << f(cNext);
-    return TheoreticalModelParameters(dropType, b, c, precision);
+    return bestParameters;
 }
