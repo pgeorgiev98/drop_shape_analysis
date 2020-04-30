@@ -380,7 +380,7 @@ double MainWindow::calculateError(const QVector<QPointF> &error)
 double MainWindow::calculateError(const QVector<QPointF> &theoretical, const QVector<QPointF> &experimental)
 {
     if (experimental.size() < 2 || theoretical.isEmpty()) {
-        return {};
+        return qInf();
     }
 
     double error = 0.0;
