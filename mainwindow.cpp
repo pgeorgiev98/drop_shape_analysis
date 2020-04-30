@@ -327,7 +327,21 @@ QVector<QPointF> MainWindow::generateError(const QVector<QPointF> &theoretical, 
 
     QVector<QPointF> error;
 
-    for (int j = 0; j < theoretical.size(); ++j) {
+    int tBegin = 0;
+    while (theoretical[tBegin].x() < experimental[0].x() && tBegin < experimental.size())
+        ++tBegin;
+
+    double dir = experimental[experimental.size() - 1].x() - experimental[experimental.size() - 2].x();
+    int tEnd = theoretical.size() - 1;
+    if (dir > 0.0)
+        while (theoretical[tEnd].x() > experimental.last().x() && tEnd > 0)
+            --tEnd;
+    else
+        while (theoretical[tEnd].x() < experimental.last().x() && tEnd > 0)
+            --tEnd;
+    ++tEnd;
+
+    for (int j = tBegin; j < tEnd; ++j) {
         const QPointF &t = theoretical[j];
         double minDist = qInf();
         for (int i = 0; i < experimental.size() - 1; ++i) {
@@ -342,7 +356,7 @@ QVector<QPointF> MainWindow::generateError(const QVector<QPointF> &theoretical, 
             if (dist < minDist)
                 minDist = dist;
         }
-        double vx = double(j)/theoretical.size();
+        double vx = double(j) / (tEnd - tBegin);
         error.append({vx, minDist});
     }
 
