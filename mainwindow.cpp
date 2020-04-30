@@ -377,6 +377,49 @@ double MainWindow::calculateError(const QVector<QPointF> &error)
     return errorAcc;
 }
 
+double MainWindow::calculateError(const QVector<QPointF> &theoretical, const QVector<QPointF> &experimental)
+{
+    if (experimental.size() < 2 || theoretical.isEmpty()) {
+        return {};
+    }
+
+    double error = 0.0;
+
+    int tBegin = 0;
+    while (theoretical[tBegin].x() < experimental[0].x() && tBegin < experimental.size())
+        ++tBegin;
+
+    double dir = experimental[experimental.size() - 1].x() - experimental[experimental.size() - 2].x();
+    int tEnd = theoretical.size() - 1;
+    if (dir > 0.0)
+        while (theoretical[tEnd].x() > experimental.last().x() && tEnd > 0)
+            --tEnd;
+    else
+        while (theoretical[tEnd].x() < experimental.last().x() && tEnd > 0)
+            --tEnd;
+    ++tEnd;
+
+    for (int j = tBegin; j < tEnd; ++j) {
+        const QPointF &t = theoretical[j];
+        double minDist = qInf();
+        for (int i = 0; i < experimental.size() - 1; ++i) {
+            const QPointF &e0 = experimental[i], &e1 = experimental[i + 1];
+            const QPointF d = e1 - e0;
+            const QPointF dp(-d.y(), d.x());
+            double l = dp.x() * (e0.y() - t.y()) - dp.y() * (e0.x() - t.x()) / (d.x() * dp.y() - d.y() * dp.x());
+            QPointF target = e0 + qBound(0.0, l, 1.0) * d;
+            double dist = qMin(QVector2D(t - target).lengthSquared(),
+                               qMin(QVector2D(t - e0).lengthSquared(),
+                                    QVector2D(t - e1).lengthSquared()));
+            if (dist < minDist)
+                minDist = dist;
+        }
+        error += minDist;
+    }
+
+    return error;
+}
+
 MainWindow::TheoreticalModelParameters MainWindow::minimizeError()
 {
     qDebug() << "In minimizeError()";
@@ -390,7 +433,7 @@ MainWindow::TheoreticalModelParameters MainWindow::minimizeError()
         precision = 0.1;
 
     auto f = [this, b, dropType, precision](double c){
-        return calculateError(generateError(generateTheoreticalModel(b, c, dropType, precision), m_currentExperimentalModel));
+        return calculateError(generateTheoreticalModel(b, c, dropType, precision), m_currentExperimentalModel);
     };
 
     auto der = [f](double c){

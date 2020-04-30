@@ -40,6 +40,7 @@ private:
     static QVector<QPointF> generateTheoreticalModel(double b, double c, DropType type, double precision);
     static QVector<QPointF> generateError(const QVector<QPointF> &theoretical, const QVector<QPointF> &experimental);
     static double calculateError(const QVector<QPointF> &error);
+    static double calculateError(const QVector<QPointF> &theoretical, const QVector<QPointF> &experimental);
 
     struct TheoreticalModelParameters
     {
