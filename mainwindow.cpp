@@ -321,26 +321,29 @@ QVector<QPointF> MainWindow::generateTheoreticalModel(double b, double c, DropTy
 
 QVector<QPointF> MainWindow::generateError(const QVector<QPointF> &theoretical, const QVector<QPointF> &experimental)
 {
-    if (theoretical.size() < 2 || experimental.isEmpty()) {
+    if (experimental.size() < 2 || theoretical.isEmpty()) {
         return {};
     }
 
     QVector<QPointF> error;
 
-    auto t0 = theoretical.begin(), t1 = theoretical.begin() + 1;
-    auto e = experimental.begin();
-
-    while (t1 != theoretical.end() && e != experimental.end()) {
-        while (e->x() > t1->x()) {
-            ++t0;
-            ++t1;
+    for (int j = 0; j < theoretical.size(); ++j) {
+        const QPointF &t = theoretical[j];
+        double minDist = qInf();
+        for (int i = 0; i < experimental.size() - 1; ++i) {
+            const QPointF &e0 = experimental[i], &e1 = experimental[i + 1];
+            const QPointF d = e1 - e0;
+            const QPointF dp(-d.y(), d.x());
+            double l = dp.x() * (e0.y() - t.y()) - dp.y() * (e0.x() - t.x()) / (d.x() * dp.y() - d.y() * dp.x());
+            QPointF target = e0 + qBound(0.0, l, 1.0) * d;
+            double dist = qMin(QVector2D(t - target).length(),
+                               qMin(QVector2D(t - e0).length(),
+                                    QVector2D(t - e1).length()));
+            if (dist < minDist)
+                minDist = dist;
         }
-        if (e->x() < t0->x())
-            continue;
-        Q_ASSERT(e->x() <= t1->x() && e->x() >= t0->x());
-        double y = t0->y() + (e->x() - t0->x()) * (t1->y() - t0->y()) / (t1->x() - t0->x());
-        error.append({e->x(), qAbs(y - e->y())});
-        ++e;
+        double vx = double(j)/theoretical.size();
+        error.append({vx, minDist});
     }
 
     return error;
