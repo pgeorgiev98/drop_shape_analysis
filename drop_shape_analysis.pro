@@ -8,6 +8,10 @@ CONFIG += c++11
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
 
+QMAKE_CXXFLAGS += -fopenmp
+QMAKE_CFLAGS += -fopenmp
+QMAKE_LFLAGS += -fopenmp
+
 SOURCES += \
     main.cpp \
     mainwindow.cpp

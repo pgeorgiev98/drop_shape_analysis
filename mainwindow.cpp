@@ -440,21 +440,35 @@ MainWindow::TheoreticalModelParameters MainWindow::minimizeError()
     }
 
     const double gdPrecision = 1e-3;
-    DropType dropType = m_dropType->currentIndex() == 0 ? DropType::PENDANT : DropType::SPINNING;
-    bool precisionValid;
-    double precision = m_inputprecision->text().replace(',', '.').toDouble(&precisionValid);
-    if (!precisionValid)
-        precision = 0.1;
+    const DropType dropType = m_dropType->currentIndex() == 0 ? DropType::PENDANT : DropType::SPINNING;
+    double precision;
+    {
+        bool precisionValid;
+        precision = m_inputprecision->text().replace(',', '.').toDouble(&precisionValid);
+        if (!precisionValid)
+            precision = 0.1;
+    }
 
     TheoreticalModelParameters bestParameters(dropType, 0, 0, precision);
     double bestError = qInf();
 
     QDateTime dt = QDateTime::currentDateTime();
-    while (!queue.isEmpty()) {
-        auto p = queue.dequeue();
-        const double b = p.first;
-        double c = p.second;
-        qDebug().nospace() << "Solving with b = " << b << " c = " << c << ") (" << tableSizeB * tableSizeC - queue.size() << "/" << tableSizeB * tableSizeC << ")";
+#pragma omp parallel
+    for (;;) {
+        double b, c;
+        bool queueIsEmpty;
+#pragma omp critical
+        {
+            queueIsEmpty = queue.isEmpty();
+            if (!queueIsEmpty) {
+                auto p = queue.dequeue();
+                b = p.first;
+                c = p.second;
+                qDebug().nospace() << "Solving with b = " << b << " c = " << c << ") (" << tableSizeB * tableSizeC - queue.size() << "/" << tableSizeB * tableSizeC << ")";
+            }
+        }
+        if (queueIsEmpty)
+            break;
 
         auto f = [this, b, dropType, precision](double c){
             return calculateError(generateTheoreticalModel(b, c, dropType, precision), m_currentExperimentalModel);
@@ -493,11 +507,14 @@ MainWindow::TheoreticalModelParameters MainWindow::minimizeError()
         c = cNext;
 
         double error = f(c);
-        qDebug() << "Completed after" << steps << "steps; b =" << b << "c =" << c << "error =" << error;
-        if (error < bestError) {
-            bestParameters.c = c;
-            bestParameters.b = b;
-            bestError = error;
+#pragma omp critical
+        {
+            qDebug() << "Completed after" << steps << "steps; b =" << b << "c =" << c << "error =" << error;
+            if (error < bestError) {
+                bestParameters.c = c;
+                bestParameters.b = b;
+                bestError = error;
+            }
         }
     }
 
