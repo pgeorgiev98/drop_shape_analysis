@@ -430,11 +430,11 @@ MainWindow::TheoreticalModelParameters MainWindow::minimizeError()
 
     QQueue<QPair<double, double>> queue;
 
-    const int tableSize = 10;
-    for (int i = 0; i < tableSize; ++i) {
-        for (int j = 0; j < tableSize; ++j) {
-            double b = minB + i * (maxB - minB) / tableSize;
-            double c = minC + j * (maxC - minC) / tableSize;
+    const int tableSizeB = 30, tableSizeC = 5;
+    for (int bi = 0; bi < tableSizeB; ++bi) {
+        for (int ci = 0; ci < tableSizeC; ++ci) {
+            double b = minB + bi * (maxB - minB) / tableSizeB;
+            double c = minC + ci * (maxC - minC) / tableSizeC;
             queue.enqueue({b, c});
         }
     }
@@ -454,7 +454,7 @@ MainWindow::TheoreticalModelParameters MainWindow::minimizeError()
         auto p = queue.dequeue();
         const double b = p.first;
         double c = p.second;
-        qDebug().nospace() << "Solving with b = " << b << " c = " << c << ") (" << tableSize * tableSize - queue.size() << "/" << tableSize * tableSize << ")";
+        qDebug().nospace() << "Solving with b = " << b << " c = " << c << ") (" << tableSizeB * tableSizeC - queue.size() << "/" << tableSizeB * tableSizeC << ")";
 
         auto f = [this, b, dropType, precision](double c){
             return calculateError(generateTheoreticalModel(b, c, dropType, precision), m_currentExperimentalModel);
