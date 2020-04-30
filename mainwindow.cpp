@@ -471,13 +471,13 @@ MainWindow::TheoreticalModelParameters MainWindow::minimizeError()
         {
             double alpha = 0.1;
 
-            double fc, fcn;
+            const double fc = f(c);
+            double fcn;
             do
             {
                 cNext = c -alpha*der(c);
                 alpha /= 2;
 
-                fc = f(c);
                 fcn = f(cNext);
 
                 ++steps;
