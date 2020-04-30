@@ -17,6 +17,7 @@
 #include <QSettings>
 #include <QList>
 #include <QQueue>
+#include <QDateTime>
 #include <QDebug>
 
 using namespace QtCharts;
@@ -448,6 +449,7 @@ MainWindow::TheoreticalModelParameters MainWindow::minimizeError()
     TheoreticalModelParameters bestParameters(dropType, 0, 0, precision);
     double bestError = qInf();
 
+    QDateTime dt = QDateTime::currentDateTime();
     while (!queue.isEmpty()) {
         auto p = queue.dequeue();
         const double b = p.first;
@@ -498,6 +500,8 @@ MainWindow::TheoreticalModelParameters MainWindow::minimizeError()
             bestError = error;
         }
     }
+
+    qDebug() << "Done. (took" << dt.msecsTo(QDateTime::currentDateTime()) << "ms)";
 
     return bestParameters;
 }
