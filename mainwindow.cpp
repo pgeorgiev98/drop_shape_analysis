@@ -353,21 +353,7 @@ QVector<QPointF> MainWindow::generateError(const QVector<QPointF> &theoretical, 
 
     QVector<QPointF> error;
 
-    int eBegin = 0;
-    while (experimental[eBegin].x() < theoretical[0].x() && eBegin < theoretical.size())
-        ++eBegin;
-
-    double dir = theoretical[theoretical.size() - 1].x() - theoretical[theoretical.size() - 2].x();
-    int eEnd = experimental.size() - 1;
-    if (dir > 0.0)
-        while (experimental[eEnd].x() > theoretical.last().x() && eEnd > 0)
-            --eEnd;
-    else
-        while (experimental[eEnd].x() < theoretical.last().x() && eEnd > 0)
-            --eEnd;
-    ++eEnd;
-
-    for (int j = eBegin; j < eEnd; ++j) {
+    for (int j = 0; j < experimental.size(); ++j) {
         const QPointF &e = experimental[j];
         double minDist = qInf();
         for (int i = 0; i < theoretical.size() - 1; ++i) {
@@ -382,7 +368,7 @@ QVector<QPointF> MainWindow::generateError(const QVector<QPointF> &theoretical, 
             if (dist < minDist)
                 minDist = dist;
         }
-        double vx = double(j) / (eEnd - eBegin);
+        double vx = double(j) / experimental.size();
         error.append({vx, minDist});
     }
 
@@ -411,21 +397,7 @@ double MainWindow::calculateError(const QVector<QPointF> &theoretical, const QVe
 
     double error = 0.0;
 
-    int eBegin = 0;
-    while (experimental[eBegin].x() < theoretical[0].x() && eBegin < theoretical.size())
-        ++eBegin;
-
-    double dir = theoretical[theoretical.size() - 1].x() - theoretical[theoretical.size() - 2].x();
-    int eEnd = experimental.size() - 1;
-    if (dir > 0.0)
-        while (experimental[eEnd].x() > theoretical.last().x() && eEnd > 0)
-            --eEnd;
-    else
-        while (experimental[eEnd].x() < theoretical.last().x() && eEnd > 0)
-            --eEnd;
-    ++eEnd;
-
-    for (int j = eBegin; j < eEnd; ++j) {
+    for (int j = 0; j < experimental.size(); ++j) {
         const QPointF &e = experimental[j];
         double minDist = qInf();
         for (int i = 0; i < theoretical.size() - 1; ++i) {
