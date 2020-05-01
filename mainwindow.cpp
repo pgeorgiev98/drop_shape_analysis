@@ -261,62 +261,86 @@ void MainWindow::updateErrorSeries()
 QVector<QPointF> MainWindow::generateTheoreticalModel(double b, double c, DropType type, double precision)
 {
     QVector<QPointF> drop;
-    double x0 = 0, z0 = 0, phi0 = 0;
-    double x1, z1, phi1;
-    double h = precision;
+    const double h = precision;
+    auto f1=[](double phi){return qCos(phi);};
+    auto f2=[](double phi){return qSin(phi);};
+    auto f3p=[b, c](double x, double z, double phi){return x == 0.0 ? b : 2*b + c*z - (qSin(phi) / x);};
+    auto f3r=[b, c](double x, double z, double phi){return x == 0.0 ? b : 2*b + c*x*x - (qSin(phi) / x);};
 
-    const int maxIterations = 20000;
-    int iteration;
+    double currx = 0, nextx, currz = 0, nextz, currphi = 0, nextphi;
+    int steps = 0, maxSteps = 20000;
 
     if(type == DropType::PENDANT)
     {
-        for (iteration = 0; iteration < maxIterations; ++iteration)
+        while(steps <= maxSteps)
         {
-            drop.append(QPointF(x0, z0));
-            if (x0 > 1.0)
-                break;
-            x1 = x0 + h * cos(phi0);
-            z1 = z0 + h * sin(phi0);
-            if(x0 == 0)
-            {
-                phi1 = phi0 + h * b;
-            }
-            else
-            {
-                phi1 = phi0 + h * (2*b + c*z0 - sin(phi0)/x0);
-            }
-            x0 = x1;
-            z0 = z1;
-            phi0 = phi1;
-        }
-    }
-    else
-    {
-        drop.append(QPointF(x0, z0));
-        for (iteration = 0; iteration < maxIterations; ++iteration)
-        {
-            x1 = x0 + h * cos(phi0);
-            z1 = z0 + h * sin(phi0);
-            if(x0 == 0)
-            {
-                phi1 = phi0 + h * b;
-            }
-            else
-            {
-                phi1 = phi0 + h * (2*b + c*x0*x0 - sin(phi0)/x0);
-            }
-            x0 = x1;
-            z0 = z1;
-            phi0 = phi1;
-            drop.append(QPointF(x0, z0));
-            if (x0 <= std::numeric_limits<double>::epsilon())
-                break;
-        }
-    }
+            drop.append({currx, currz});
 
-    if (iteration >= maxIterations) {
-        return {};
+            if(currx > 1.0)
+                break;
+
+            double k1, k2, k3, k4;
+            k1 = f1(currphi);
+            k2 = f1(currphi + (h/2));
+            k3 = f1(currphi + (h/2));
+            k4 = f1(currphi + h);
+            nextx = currx + h/6*(k1 + 2*k2 + 2*k3 + k4);
+
+            k1 = f2(currphi);
+            k2 = f2(currphi + (h/2));
+            k3 = f2(currphi + (h/2));
+            k4 = f2(currphi + h);
+            nextz = currz + h/6*(k1 + 2*k2 + 2*k3 + k4);
+
+            k1 = f3p(currx, currz, currphi);
+            k2 = f3p(currx, currz, currphi + (h/2));
+            k3 = f3p(currx, currz, currphi + (h/2));
+            k4 = f3p(currx, currz, currphi + h);
+            nextphi = currphi + h/6*(k1 + 2*k2 + 2*k3 + k4);
+
+            currx = nextx;
+            currz = nextz;
+            currphi = nextphi;
+
+            ++steps;
+        }
     }
+    else{
+        while(steps <= maxSteps)
+        {
+            drop.append({currx, currz});
+
+            double k1, k2, k3, k4;
+            k1 = f1(currphi);
+            k2 = f1(currphi + (h/2));
+            k3 = f1(currphi + (h/2));
+            k4 = f1(currphi + h);
+            nextx = currx + h/6*(k1 + 2*k2 + 2*k3 + k4);
+
+            k1 = f2(currphi);
+            k2 = f2(currphi + (h/2));
+            k3 = f2(currphi + (h/2));
+            k4 = f2(currphi + h);
+            nextz = currz + h/6*(k1 + 2*k2 + 2*k3 + k4);
+
+            k1 = f3r(currx, currz, currphi);
+            k2 = f3r(currx, currz, currphi + (h/2));
+            k3 = f3r(currx, currz, currphi + (h/2));
+            k4 = f3r(currx, currz, currphi + h);
+            nextphi = currphi + h/6*(k1 + 2*k2 + 2*k3 + k4);
+
+            currx = nextx;
+            currz = nextz;
+            currphi = nextphi;
+
+            if(currx <= std::numeric_limits<double>::epsilon())
+                break;
+
+            ++steps;
+        }
+    }
+    if(steps >= maxSteps)
+        return {};
 
     return drop;
 }
