@@ -347,42 +347,42 @@ QVector<QPointF> MainWindow::generateTheoreticalModel(double b, double c, DropTy
 
 QVector<QPointF> MainWindow::generateError(const QVector<QPointF> &theoretical, const QVector<QPointF> &experimental)
 {
-    if (experimental.size() < 2 || theoretical.isEmpty()) {
+    if (theoretical.size() < 2 || experimental.isEmpty()) {
         return {};
     }
 
     QVector<QPointF> error;
 
-    int tBegin = 0;
-    while (theoretical[tBegin].x() < experimental[0].x() && tBegin < experimental.size())
-        ++tBegin;
+    int eBegin = 0;
+    while (experimental[eBegin].x() < theoretical[0].x() && eBegin < theoretical.size())
+        ++eBegin;
 
-    double dir = experimental[experimental.size() - 1].x() - experimental[experimental.size() - 2].x();
-    int tEnd = theoretical.size() - 1;
+    double dir = theoretical[theoretical.size() - 1].x() - theoretical[theoretical.size() - 2].x();
+    int eEnd = experimental.size() - 1;
     if (dir > 0.0)
-        while (theoretical[tEnd].x() > experimental.last().x() && tEnd > 0)
-            --tEnd;
+        while (experimental[eEnd].x() > theoretical.last().x() && eEnd > 0)
+            --eEnd;
     else
-        while (theoretical[tEnd].x() < experimental.last().x() && tEnd > 0)
-            --tEnd;
-    ++tEnd;
+        while (experimental[eEnd].x() < theoretical.last().x() && eEnd > 0)
+            --eEnd;
+    ++eEnd;
 
-    for (int j = tBegin; j < tEnd; ++j) {
-        const QPointF &t = theoretical[j];
+    for (int j = eBegin; j < eEnd; ++j) {
+        const QPointF &e = experimental[j];
         double minDist = qInf();
-        for (int i = 0; i < experimental.size() - 1; ++i) {
-            const QPointF &e0 = experimental[i], &e1 = experimental[i + 1];
-            const QPointF d = e1 - e0;
+        for (int i = 0; i < theoretical.size() - 1; ++i) {
+            const QPointF &t0 = theoretical[i], &t1 = theoretical[i + 1];
+            const QPointF d = t1 - t0;
             const QPointF dp(-d.y(), d.x());
-            double l = dp.x() * (e0.y() - t.y()) - dp.y() * (e0.x() - t.x()) / (d.x() * dp.y() - d.y() * dp.x());
-            QPointF target = e0 + qBound(0.0, l, 1.0) * d;
-            double dist = qMin(QVector2D(t - target).length(),
-                               qMin(QVector2D(t - e0).length(),
-                                    QVector2D(t - e1).length()));
+            double l = dp.x() * (t0.y() - e.y()) - dp.y() * (t0.x() - e.x()) / (d.x() * dp.y() - d.y() * dp.x());
+            QPointF target = t0 + qBound(0.0, l, 1.0) * d;
+            double dist = qMin(QVector2D(e - target).length(),
+                               qMin(QVector2D(e - t0).length(),
+                                    QVector2D(e - t1).length()));
             if (dist < minDist)
                 minDist = dist;
         }
-        double vx = double(j) / (tEnd - tBegin);
+        double vx = double(j) / (eEnd - eBegin);
         error.append({vx, minDist});
     }
 
@@ -405,38 +405,38 @@ double MainWindow::calculateError(const QVector<QPointF> &error)
 
 double MainWindow::calculateError(const QVector<QPointF> &theoretical, const QVector<QPointF> &experimental)
 {
-    if (experimental.size() < 2 || theoretical.isEmpty()) {
+    if (theoretical.size() < 2 || experimental.isEmpty()) {
         return qInf();
     }
 
     double error = 0.0;
 
-    int tBegin = 0;
-    while (theoretical[tBegin].x() < experimental[0].x() && tBegin < experimental.size())
-        ++tBegin;
+    int eBegin = 0;
+    while (experimental[eBegin].x() < theoretical[0].x() && eBegin < theoretical.size())
+        ++eBegin;
 
-    double dir = experimental[experimental.size() - 1].x() - experimental[experimental.size() - 2].x();
-    int tEnd = theoretical.size() - 1;
+    double dir = theoretical[theoretical.size() - 1].x() - theoretical[theoretical.size() - 2].x();
+    int eEnd = experimental.size() - 1;
     if (dir > 0.0)
-        while (theoretical[tEnd].x() > experimental.last().x() && tEnd > 0)
-            --tEnd;
+        while (experimental[eEnd].x() > theoretical.last().x() && eEnd > 0)
+            --eEnd;
     else
-        while (theoretical[tEnd].x() < experimental.last().x() && tEnd > 0)
-            --tEnd;
-    ++tEnd;
+        while (experimental[eEnd].x() < theoretical.last().x() && eEnd > 0)
+            --eEnd;
+    ++eEnd;
 
-    for (int j = tBegin; j < tEnd; ++j) {
-        const QPointF &t = theoretical[j];
+    for (int j = eBegin; j < eEnd; ++j) {
+        const QPointF &e = experimental[j];
         double minDist = qInf();
-        for (int i = 0; i < experimental.size() - 1; ++i) {
-            const QPointF &e0 = experimental[i], &e1 = experimental[i + 1];
-            const QPointF d = e1 - e0;
+        for (int i = 0; i < theoretical.size() - 1; ++i) {
+            const QPointF &t0 = theoretical[i], &t1 = theoretical[i + 1];
+            const QPointF d = t1 - t0;
             const QPointF dp(-d.y(), d.x());
-            double l = dp.x() * (e0.y() - t.y()) - dp.y() * (e0.x() - t.x()) / (d.x() * dp.y() - d.y() * dp.x());
-            QPointF target = e0 + qBound(0.0, l, 1.0) * d;
-            double dist = qMin(QVector2D(t - target).lengthSquared(),
-                               qMin(QVector2D(t - e0).lengthSquared(),
-                                    QVector2D(t - e1).lengthSquared()));
+            double l = dp.x() * (t0.y() - e.y()) - dp.y() * (t0.x() - e.x()) / (d.x() * dp.y() - d.y() * dp.x());
+            QPointF target = t0 + qBound(0.0, l, 1.0) * d;
+            double dist = qMin(QVector2D(e - target).lengthSquared(),
+                               qMin(QVector2D(e - t0).lengthSquared(),
+                                    QVector2D(e - t1).lengthSquared()));
             if (dist < minDist)
                 minDist = dist;
         }
