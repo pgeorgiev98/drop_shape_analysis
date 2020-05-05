@@ -61,7 +61,7 @@ void Worker::doWork(const QVector<QPointF> &experimental, DropGenerator::DropTyp
 
         double cNext;
         int steps = 0;
-        const int maxSteps = 1000;
+        const int maxSteps = 75;
         while(steps < maxSteps)
         {
             double alpha = 0.1;
