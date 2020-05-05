@@ -35,25 +35,5 @@ private:
     QtCharts::QLineSeries *m_experimentalSeries;
     QtCharts::QLineSeries *m_errorSeries;
     QVector<QPointF> m_currentTheoreticalModel, m_currentExperimentalModel;
-
-    enum class DropType {PENDANT, SPINNING};
-    static QVector<QPointF> generateTheoreticalModel(double b, double c, DropType type, double precision);
-    static QVector<QPointF> generateError(const QVector<QPointF> &theoretical, const QVector<QPointF> &experimental);
-    static double calculateError(const QVector<QPointF> &error);
-    static double calculateError(const QVector<QPointF> &theoretical, const QVector<QPointF> &experimental);
-
-    struct TheoreticalModelParameters
-    {
-        DropType dropType;
-        double b, c;
-        double precision;
-
-        TheoreticalModelParameters(DropType dropType, double b, double c, double precision)
-            : dropType(dropType), b(b), c(c), precision(precision)
-        {}
-    };
-
-    TheoreticalModelParameters minimizeError();
-
 };
 #endif // MAINWINDOW_H

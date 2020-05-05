@@ -13,10 +13,12 @@ QMAKE_CFLAGS += -fopenmp
 QMAKE_LFLAGS += -fopenmp
 
 SOURCES += \
+    dropgenerator.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
+    dropgenerator.h \
     mainwindow.h
 
 # Default rules for deployment.
