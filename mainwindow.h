@@ -24,6 +24,7 @@ public slots:
     void selectExperimentalModel();
     void setExperimentalModel(const QString &filePath);
     void updateErrorSeries();
+    void selectImage();
 
 private:
     QHBoxLayout *m_chartsLayout;

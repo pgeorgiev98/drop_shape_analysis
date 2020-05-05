@@ -29,6 +29,7 @@ public:
     static double calculateError(const QVector<QPointF> &error);
     static double calculateError(const QVector<QPointF> &theoretical, const QVector<QPointF> &experimental);
     static TheoreticalModelParameters minimizeError(const QVector<QPointF> &experimental, DropType dropType, double precision);
+    static QVector<QPointF> generateModelFromImage(const QString fileName);
 };
 
 #endif // DROPGENERATOR_H
