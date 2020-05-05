@@ -268,7 +268,7 @@ QVector<QPointF> MainWindow::generateTheoreticalModel(double b, double c, DropTy
     auto f3r=[b, c](double x, double z, double phi){return x == 0.0 ? b : 2*b + c*x*x - (qSin(phi) / x);};
 
     double currx = 0, nextx, currz = 0, nextz, currphi = 0, nextphi;
-    int steps = 0, maxSteps = 20000;
+    int steps = 0, maxSteps = 500;
 
     if(type == DropType::PENDANT)
     {
@@ -280,23 +280,25 @@ QVector<QPointF> MainWindow::generateTheoreticalModel(double b, double c, DropTy
                 break;
 
             double k1, k2, k3, k4;
-            k1 = f1(currphi);
-            k2 = f1(currphi + (h/2));
-            k3 = f1(currphi + (h/2));
-            k4 = f1(currphi + h);
-            nextx = currx + h/6*(k1 + 2*k2 + 2*k3 + k4);
+            double l1, l2, l3, l4;
+            double m1, m2, m3, m4;
 
-            k1 = f2(currphi);
-            k2 = f2(currphi + (h/2));
-            k3 = f2(currphi + (h/2));
-            k4 = f2(currphi + h);
-            nextz = currz + h/6*(k1 + 2*k2 + 2*k3 + k4);
+            k1 = h*f1(currphi);
+            l1 = h*f2(currphi);
+            m1 = h*f3p(currx, currz, currphi);
+            k2 = h*f1(currphi + m1/2);
+            l2 = h*f2(currphi + m1/2);
+            m2 = h*f3p(currx + k1/2, currz + l1/2, currphi + m1/2);
+            k3 = h*f1(currphi + m2/2);
+            l3 = h*f2(currphi + m2/2);
+            m3 = h*f3p(currx + k2/2, currz + l2/2, currphi + m2/2);
+            k4 = h*f1(currphi + m3);
+            l4 = h*f2(currphi + m3);
+            m4 = h*f3p(currx + k3, currz + l3, currphi + m3);
 
-            k1 = f3p(currx, currz, currphi);
-            k2 = f3p(currx, currz, currphi + (h/2));
-            k3 = f3p(currx, currz, currphi + (h/2));
-            k4 = f3p(currx, currz, currphi + h);
-            nextphi = currphi + h/6*(k1 + 2*k2 + 2*k3 + k4);
+            nextx = currx + 1.0/6 * (k1 + 2*k2 + 2*k3 + k4);
+            nextz = currz + 1.0/6 * (l1 + 2*l2 + 2*l3 + l4);
+            nextphi = currphi + 1.0/6 * (m1 + 2*m2 + 2*m3 + m4);
 
             currx = nextx;
             currz = nextz;
@@ -311,23 +313,24 @@ QVector<QPointF> MainWindow::generateTheoreticalModel(double b, double c, DropTy
             drop.append({currx, currz});
 
             double k1, k2, k3, k4;
-            k1 = f1(currphi);
-            k2 = f1(currphi + (h/2));
-            k3 = f1(currphi + (h/2));
-            k4 = f1(currphi + h);
-            nextx = currx + h/6*(k1 + 2*k2 + 2*k3 + k4);
+            double l1, l2, l3, l4;
+            double m1, m2, m3, m4;
+            k1 = h*f1(currphi);
+            l1 = h*f2(currphi);
+            m1 = h*f3r(currx, currz, currphi);
+            k2 = h*f1(currphi + m1/2);
+            l2 = h*f2(currphi + m1/2);
+            m2 = h*f3r(currx + k1/2, currz + l1/2, currphi + m1/2);
+            k3 = h*f1(currphi + m2/2);
+            l3 = h*f2(currphi + m2/2);
+            m3 = h*f3r(currx + k2/2, currz + l2/2, currphi + m2/2);
+            k4 = h*f1(currphi + m3);
+            l4 = h*f2(currphi + m3);
+            m4 = h*f3r(currx + k3, currz + l3, currphi + m3);
 
-            k1 = f2(currphi);
-            k2 = f2(currphi + (h/2));
-            k3 = f2(currphi + (h/2));
-            k4 = f2(currphi + h);
-            nextz = currz + h/6*(k1 + 2*k2 + 2*k3 + k4);
-
-            k1 = f3r(currx, currz, currphi);
-            k2 = f3r(currx, currz, currphi + (h/2));
-            k3 = f3r(currx, currz, currphi + (h/2));
-            k4 = f3r(currx, currz, currphi + h);
-            nextphi = currphi + h/6*(k1 + 2*k2 + 2*k3 + k4);
+            nextx = currx + 1.0/6 * (k1 + 2*k2 + 2*k3 + k4);
+            nextz = currz + 1.0/6 * (l1 + 2*l2 + 2*l3 + l4);
+            nextphi = currphi + 1.0/6 * (m1 + 2*m2 + 2*m3 + m4);
 
             currx = nextx;
             currz = nextz;
@@ -339,8 +342,12 @@ QVector<QPointF> MainWindow::generateTheoreticalModel(double b, double c, DropTy
             ++steps;
         }
     }
+
     if(steps >= maxSteps)
+    {
         return {};
+    }
+    qDebug() << "steps:" << steps;
 
     return drop;
 }
