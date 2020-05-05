@@ -38,6 +38,12 @@ void Worker::doWork(const QVector<QPointF> &experimental, DropGenerator::DropTyp
                 auto p = queue.dequeue();
                 b = p.first;
                 c = p.second;
+                int threadNum = omp_get_thread_num();
+                if (threadNum == 0) {
+                    double progress = tableSizeB * tableSizeC - queue.size();
+                    progress /= tableSizeB * tableSizeC;
+                    emit progressChanged(progress);
+                }
             }
         }
         if (queueIsEmpty)

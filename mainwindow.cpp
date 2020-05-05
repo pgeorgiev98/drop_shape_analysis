@@ -209,7 +209,7 @@ void MainWindow::visualiseClosestTheoreticalModel()
     QDialog waitingDialog(this);
     QVBoxLayout *l = new QVBoxLayout;
     QProgressBar *progressBar = new QProgressBar;
-    progressBar->setRange(0, 0);
+    progressBar->setRange(0, 1000);
     l->addWidget(new QLabel("Minimizing error..."), 0, Qt::AlignHCenter);
     l->addWidget(progressBar);
     waitingDialog.setLayout(l);
@@ -217,6 +217,10 @@ void MainWindow::visualiseClosestTheoreticalModel()
     QThread *workerThread = new QThread(this);
     Worker *worker = new Worker;
     worker->moveToThread(workerThread);
+
+    connect(worker, &Worker::progressChanged, progressBar, [progressBar](double progress) {
+        progressBar->setValue(int(1000 * progress));
+    }, Qt::QueuedConnection);
 
     QTimer singleShotTimer;
     singleShotTimer.setSingleShot(true);
