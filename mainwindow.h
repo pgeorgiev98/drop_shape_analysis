@@ -28,7 +28,7 @@ public slots:
 private:
     QHBoxLayout *m_chartsLayout;
     QLineEdit *m_inputprecision, *m_inputb, *m_inputc;
-    QLabel *m_modelErrorLabel;
+    QLabel *m_modelErrorLabel, *m_iterationsCountLabel;
     QtCharts::QChartView *m_modelChart, *m_errorChart;
     QComboBox *m_dropType;
     QtCharts::QLineSeries *m_theoreticalSeries;
