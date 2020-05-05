@@ -30,6 +30,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_inputb(new QLineEdit)
     , m_inputc(new QLineEdit)
     , m_modelErrorLabel(new QLabel)
+    , m_iterationsCountLabel(new QLabel)
     , m_modelChart(new QChartView)
     , m_errorChart(new QChartView)
     , m_dropType(new QComboBox)
@@ -53,6 +54,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_inputc->setAlignment(Qt::AlignRight);
     m_inputprecision->setAlignment(Qt::AlignRight);
     m_modelErrorLabel->setAlignment(Qt::AlignHCenter);
+    m_iterationsCountLabel->setAlignment(Qt::AlignHCenter);
 
     QPushButton *visualiseTheoreticalModelButton = new QPushButton("Visualise theoretical model");
     QPushButton *loadExperimentalModelButton = new QPushButton("Load experimental model");
@@ -105,6 +107,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     grid->setRowStretch(row++, 1);
 
+    grid->addWidget(m_iterationsCountLabel, row++, 0, 1, 2);
     grid->addWidget(m_modelErrorLabel, row++, 0, 1, 2);
 
     m_chartsLayout->addLayout(grid);
@@ -124,6 +127,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_errorChart->chart()->createDefaultAxes();
     m_errorChart->setRenderHint(QPainter::Antialiasing);
 
+    connect(m_inputprecision, &QLineEdit::returnPressed, this, &MainWindow::visualiseTheoreticalModel);
     connect(m_inputb, &QLineEdit::returnPressed, this, &MainWindow::visualiseTheoreticalModel);
     connect(m_inputc, &QLineEdit::returnPressed, this, &MainWindow::visualiseTheoreticalModel);
 
@@ -174,8 +178,10 @@ void MainWindow::visualiseTheoreticalModel()
     if(drop.isEmpty())
     {
         QMessageBox::critical(this, "Error", "Maximum number of iterations reached");
+        m_iterationsCountLabel->setText(QString());
         return;
     }
+    m_iterationsCountLabel->setText(QString("Iterations: %1").arg(drop.size() - 1));
     setSeries(m_theoreticalSeries, drop);
     m_currentTheoreticalModel = drop;
     updateErrorSeries();

@@ -22,7 +22,7 @@ QVector<QPointF> DropGenerator::generateTheoreticalModel(double b, double c, Dro
     auto f3r=[b, c](double x, double z, double phi){return x == 0.0 ? b : 2*b + c*x*x - (qSin(phi) / x);};
 
     double currx = 0, nextx, currz = 0, nextz, currphi = 0, nextphi;
-    int steps = 0, maxSteps = 500;
+    int steps = 0, maxSteps = 5000;
 
     if(type == DropType::PENDANT)
     {
