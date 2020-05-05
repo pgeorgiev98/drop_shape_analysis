@@ -2,6 +2,13 @@
 
 #include <QtMath>
 #include <QVector2D>
+#include <QQueue>
+#include <QPair>
+#include <QDebug>
+#include <QDateTime>
+#include <QImage>
+#include <QVector>
+#include <QColor>
 
 QVector<QPointF> DropGenerator::generateTheoreticalModel(double b, double c, DropType type, double precision)
 {
@@ -167,4 +174,63 @@ double DropGenerator::calculateError(const QVector<QPointF> &theoretical, const 
     }
 
     return error;
+}
+
+QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
+{
+    QImage image;
+    if(!image.load(fileName))
+    {
+        qDebug() << "no";
+        return {};
+    }
+    auto white = QColorConstants::White;
+    auto black = QColorConstants::Black;
+
+    image.setPixelColor(0, 0, white);
+    for(int i = 0; i < image.height(); ++i)
+    {
+        for(int j = 0; j < image.width(); ++j)
+        {
+            QColor color = image.pixelColor(j, i);
+            if(color.valueF() < 0.4)
+            {
+                image.setPixelColor(j, i, black);
+            }
+            else
+            {
+                image.setPixelColor(j, i, white);
+            }
+        }
+    }
+
+    QVector<QPointF> drop;
+    int mostLeft = image.width(), apex = 0, apexY = 0;
+    for(int i = 0; i < image.height(); ++i)
+    {
+        for(int j = 0; j < image.width(); ++j)
+        {
+            if(image.pixelColor(j, i).valueF() < 0.4)
+            {
+                drop.append(QPointF(j, i));
+                if(j < mostLeft)
+                    mostLeft = j;
+                if(j > apex)
+                {
+                    apex = j;
+                    apexY = i;
+                }
+                break;
+            }
+        }
+    }
+    double scaleFactor = apex - mostLeft;
+
+    for(auto &point : drop)
+    {
+        point.setX(point.x() + 2*(apex - point.x()) - apex);
+        point.setY(apexY - point.y());
+        point /= scaleFactor;
+    }
+    return drop;
 }

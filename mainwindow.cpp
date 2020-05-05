@@ -61,6 +61,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     QPushButton *visualiseTheoreticalModelButton = new QPushButton("Visualise theoretical model");
     QPushButton *loadExperimentalModelButton = new QPushButton("Load experimental model");
+    QPushButton *loadModelFromImageButton = new QPushButton("Load model from image");
     QPushButton *generateClosestModelButton = new QPushButton("Generate closest theoretical model");
 
     QGroupBox *calculationSettingsBox = new QGroupBox("Calculation settings");
@@ -106,6 +107,7 @@ MainWindow::MainWindow(QWidget *parent)
     grid->addWidget(theoreticalModelBox, row++, 0, 1, 2);
 
     grid->addWidget(loadExperimentalModelButton, row++, 0, 1, 2);
+    grid->addWidget(loadModelFromImageButton, row++, 0, 1, 2);
     grid->addWidget(generateClosestModelButton, row++, 0, 1, 2);
 
     grid->setRowStretch(row++, 1);
@@ -136,6 +138,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(visualiseTheoreticalModelButton, &QPushButton::clicked, this, &MainWindow::visualiseTheoreticalModel);
     connect(loadExperimentalModelButton, &QPushButton::clicked, this, &MainWindow::selectExperimentalModel);
+    connect(loadModelFromImageButton, &QPushButton::clicked, this, &MainWindow::selectImage);
     connect(generateClosestModelButton, &QPushButton::clicked, this, &MainWindow::visualiseClosestTheoreticalModel);
 }
 
@@ -157,12 +160,13 @@ void MainWindow::setSeries(QLineSeries *series, const QVector<QPointF> &points)
     c->createDefaultAxes();
     QList<QAbstractAxis*> axesX= m_modelChart->chart()->axes(Qt::Horizontal);
     QList<QAbstractAxis*> axesY= m_modelChart->chart()->axes(Qt::Vertical);
-
+/*
     for(auto axisX : axesX)
         axisX->setRange(0, 1);
 
     for(auto axisY : axesY)
         axisY->setMin(0);
+        */
 }
 
 void MainWindow::visualiseTheoreticalModel()
@@ -315,5 +319,21 @@ void MainWindow::updateErrorSeries()
         m_modelErrorLabel->setText(QString("Squared error: %1").arg(errorValue));
     } else {
         m_modelErrorLabel->setText(QString());
+    }
+}
+
+void MainWindow::selectImage()
+{
+    QSettings settings;
+    qDebug() << "hello";
+    static const char *imageDirKey = "image-dir";
+    QString dir = settings.value(imageDirKey, QString()).toString();
+    QString fileName = QFileDialog::getOpenFileName(this, "Select image", dir);
+    if (!fileName.isEmpty()) {
+        settings.setValue(imageDirKey, QFileInfo(fileName).dir().path());
+        auto drop = DropGenerator::generateModelFromImage(fileName);
+        setSeries(m_experimentalSeries, drop);
+        m_currentExperimentalModel = drop;
+        updateErrorSeries();
     }
 }

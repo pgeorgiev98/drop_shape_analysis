@@ -27,6 +27,7 @@ public slots:
     void setExperimentalModel(const QString &filePath);
     void setBestTheoreticalModel(DropGenerator::TheoreticalModelParameters parameters);
     void updateErrorSeries();
+    void selectImage();
 
 private:
     QHBoxLayout *m_chartsLayout;
