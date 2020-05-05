@@ -15,11 +15,13 @@ QMAKE_LFLAGS += -fopenmp
 SOURCES += \
     dropgenerator.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    worker.cpp
 
 HEADERS += \
     dropgenerator.h \
-    mainwindow.h
+    mainwindow.h \
+    worker.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

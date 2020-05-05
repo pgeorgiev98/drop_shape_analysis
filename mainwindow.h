@@ -1,6 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "dropgenerator.h"
+
 #include <QMainWindow>
 #include <QChartView>
 #include <QLineEdit>
@@ -23,6 +25,7 @@ public slots:
     void visualiseClosestTheoreticalModel();
     void selectExperimentalModel();
     void setExperimentalModel(const QString &filePath);
+    void setBestTheoreticalModel(DropGenerator::TheoreticalModelParameters parameters);
     void updateErrorSeries();
 
 private:
