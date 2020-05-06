@@ -158,14 +158,31 @@ void MainWindow::setSeries(QLineSeries *series, const QVector<QPointF> &points)
         series->append(p.x(), p.y());
     c->addSeries(series);
     c->createDefaultAxes();
-    QList<QAbstractAxis*> axesX= m_modelChart->chart()->axes(Qt::Horizontal);
-    QList<QAbstractAxis*> axesY= m_modelChart->chart()->axes(Qt::Vertical);
+    QList<QAbstractAxis*> axesX= c->axes(Qt::Horizontal);
+    QList<QAbstractAxis*> axesY= c->axes(Qt::Vertical);
+
+    double maxX = 0.0;
+    double maxY = 0.0;
+    for (QAbstractSeries *series : c->series()) {
+        QXYSeries *s = static_cast<QXYSeries *>(series);
+        const auto &points = s->points();
+        for (auto p : points) {
+            if (p.x() > maxX)
+                maxX = p.x();
+            if (p.y() > maxY)
+                maxY = p.y();
+        }
+    }
+
+    if (maxX == 0.0)
+        maxX = 1.0;
+    if (maxY == 0.0)
+        maxY = 1.0;
 
     for(auto axisX : axesX)
-        axisX->setRange(0, 1);
-
+        axisX->setRange(0, maxX);
     for(auto axisY : axesY)
-        axisY->setMin(0);
+        axisY->setRange(0, maxY);
 }
 
 void MainWindow::visualiseTheoreticalModel()
