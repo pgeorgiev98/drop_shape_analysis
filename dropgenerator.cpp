@@ -136,28 +136,50 @@ QVector<QPointF> DropGenerator::generateError(const QVector<QPointF> &theoretica
         return {};
     }
 
-    QVector<QPointF> error;
+    QVector<QPointF> totalError;
+    QVector<QVector<QPointF>> errors;
 
-    for (int j = 0; j < experimental.size(); ++j) {
-        const QPointF &e = experimental[j];
-        double minDist = qInf();
-        for (int i = 0; i < theoretical.size() - 1; ++i) {
-            const QPointF &t0 = theoretical[i], &t1 = theoretical[i + 1];
-            const QPointF d = t1 - t0;
-            const QPointF dp(-d.y(), d.x());
-            double l = dp.x() * (t0.y() - e.y()) - dp.y() * (t0.x() - e.x()) / (d.x() * dp.y() - d.y() * dp.x());
-            QPointF target = t0 + qBound(0.0, l, 1.0) * d;
-            double dist = qMin(QVector2D(e - target).length(),
-                               qMin(QVector2D(e - t0).length(),
-                                    QVector2D(e - t1).length()));
-            if (dist < minDist)
-                minDist = dist;
+    typedef const QVector<QPointF> &ModelRef;
+    QVector<QPair<ModelRef, ModelRef>> modelsArr = {{theoretical, experimental}, {experimental, theoretical}};
+
+    for (QPair<ModelRef, ModelRef> models : modelsArr) {
+        ModelRef modelA = models.first;
+        ModelRef modelB = models.second;
+        QVector<QPointF> error;
+        for (int j = 0; j < modelA.size(); ++j) {
+            const QPointF &a = modelA[j];
+            double minDist = qInf();
+            for (int i = 0; i < modelB.size() - 1; ++i) {
+                const QPointF &b0 = modelB[i], &b1 = modelB[i + 1];
+                const QPointF d = b1 - b0;
+                const QPointF dp(-d.y(), d.x());
+                double l = dp.x() * (b0.y() - a.y()) - dp.y() * (b0.x() - a.x()) / (d.x() * dp.y() - d.y() * dp.x());
+                QPointF target = b0 + qBound(0.0, l, 1.0) * d;
+                double dist = qMin(QVector2D(a - target).length(),
+                                   qMin(QVector2D(a - b0).length(),
+                                        QVector2D(a - b1).length()));
+                if (dist < minDist)
+                    minDist = dist;
+            }
+            double vx = double(j) / modelA.size();
+            error.append({vx, minDist});
         }
-        double vx = double(j) / experimental.size();
-        error.append({vx, minDist});
+        errors.append(std::move(error));
     }
 
-    return error;
+    // Merge errors into totalError
+    int i0 = 0, i1 = 0;
+    while (i0 < errors[0].size() && i1 < errors[1].size())
+        if (errors[0][i0].x() < errors[1][i1].x())
+            totalError.append(errors[0][i0++]);
+        else
+            totalError.append(errors[1][i1++]);
+    for (; i0 < errors[0].size(); ++i0)
+        totalError.append(errors[0][i0]);
+    for (; i1 < errors[1].size(); ++i1)
+        totalError.append(errors[1][i1]);
+
+    return totalError;
 }
 
 double DropGenerator::calculateError(const QVector<QPointF> &error)
@@ -180,27 +202,35 @@ double DropGenerator::calculateError(const QVector<QPointF> &theoretical, const 
         return qInf();
     }
 
-    double error = 0.0;
+    double totalError = 0.0;
 
-    for (int j = 0; j < experimental.size(); ++j) {
-        const QPointF &e = experimental[j];
-        double minDist = qInf();
-        for (int i = 0; i < theoretical.size() - 1; ++i) {
-            const QPointF &t0 = theoretical[i], &t1 = theoretical[i + 1];
-            const QPointF d = t1 - t0;
-            const QPointF dp(-d.y(), d.x());
-            double l = dp.x() * (t0.y() - e.y()) - dp.y() * (t0.x() - e.x()) / (d.x() * dp.y() - d.y() * dp.x());
-            QPointF target = t0 + qBound(0.0, l, 1.0) * d;
-            double dist = qMin(QVector2D(e - target).lengthSquared(),
-                               qMin(QVector2D(e - t0).lengthSquared(),
-                                    QVector2D(e - t1).lengthSquared()));
-            if (dist < minDist)
-                minDist = dist;
+    typedef const QVector<QPointF> &ModelRef;
+    QVector<QPair<ModelRef, ModelRef>> modelsArr = {{theoretical, experimental}, {experimental, theoretical}};
+
+    for (QPair<ModelRef, ModelRef> models : modelsArr) {
+        ModelRef modelA = models.first;
+        ModelRef modelB = models.second;
+        QVector<QPointF> error;
+        for (int j = 0; j < modelA.size(); ++j) {
+            const QPointF &a = modelA[j];
+            double minDist = qInf();
+            for (int i = 0; i < modelB.size() - 1; ++i) {
+                const QPointF &b0 = modelB[i], &b1 = modelB[i + 1];
+                const QPointF d = b1 - b0;
+                const QPointF dp(-d.y(), d.x());
+                double l = dp.x() * (b0.y() - a.y()) - dp.y() * (b0.x() - a.x()) / (d.x() * dp.y() - d.y() * dp.x());
+                QPointF target = b0 + qBound(0.0, l, 1.0) * d;
+                double dist = qMin(QVector2D(a - target).lengthSquared(),
+                                   qMin(QVector2D(a - b0).lengthSquared(),
+                                        QVector2D(a - b1).lengthSquared()));
+                if (dist < minDist)
+                    minDist = dist;
+            }
+            totalError += minDist;
         }
-        error += minDist;
     }
 
-    return error;
+    return totalError;
 }
 
 QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
