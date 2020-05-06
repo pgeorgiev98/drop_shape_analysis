@@ -12,6 +12,11 @@
 
 QVector<QPointF> DropGenerator::generateTheoreticalModel(double b, double c, DropType type, double precision)
 {
+    const int maximumXDirectionChanges = (type == DropType::PENDANT ? 2 : 1);
+    const int maximumYDirectionChanges = (type == DropType::PENDANT ? 0 : 1);
+    int xDirectionChanges = 0, yDirectionChanges = 0;
+    double currentXDirection = 1, currentYDirection = 1; // Moving upwards to the right
+
     QVector<QPointF> drop;
     const double h = precision;
     auto f1=[](double phi){return qCos(phi);};
@@ -52,6 +57,17 @@ QVector<QPointF> DropGenerator::generateTheoreticalModel(double b, double c, Dro
             nextz = currz + 1.0/6 * (l1 + 2*l2 + 2*l3 + l4);
             nextphi = currphi + 1.0/6 * (m1 + 2*m2 + 2*m3 + m4);
 
+            if ((nextx - currx) * currentXDirection < 0.0) {
+                if (++xDirectionChanges > maximumXDirectionChanges)
+                    break;
+                currentXDirection = nextx - currx;
+            }
+            if ((nextz - currz) * currentYDirection < 0.0) {
+                if (++yDirectionChanges > maximumYDirectionChanges)
+                    break;
+                currentYDirection = nextz - currz;
+            }
+
             currx = nextx;
             currz = nextz;
             currphi = nextphi;
@@ -83,6 +99,17 @@ QVector<QPointF> DropGenerator::generateTheoreticalModel(double b, double c, Dro
             nextx = currx + 1.0/6 * (k1 + 2*k2 + 2*k3 + k4);
             nextz = currz + 1.0/6 * (l1 + 2*l2 + 2*l3 + l4);
             nextphi = currphi + 1.0/6 * (m1 + 2*m2 + 2*m3 + m4);
+
+            if ((nextx - currx) * currentXDirection < 0.0) {
+                if (++xDirectionChanges > maximumXDirectionChanges)
+                    break;
+                currentXDirection = nextx - currx;
+            }
+            if ((nextz - currz) * currentYDirection < 0.0) {
+                if (++yDirectionChanges > maximumYDirectionChanges)
+                    break;
+                currentYDirection = nextz - currz;
+            }
 
             currx = nextx;
             currz = nextz;
