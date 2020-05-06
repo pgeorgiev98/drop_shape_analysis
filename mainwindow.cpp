@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "dropgenerator.h"
+#include "worker.h"
 
 #include <QTextStream>
 #include <QPainter>
@@ -17,8 +18,10 @@
 #include <QDoubleValidator>
 #include <QSettings>
 #include <QList>
-#include <QQueue>
-#include <QDateTime>
+#include <QTimer>
+#include <QDialog>
+#include <QProgressBar>
+#include <QThread>
 #include <QDebug>
 
 using namespace QtCharts;
@@ -206,12 +209,44 @@ void MainWindow::visualiseClosestTheoreticalModel()
             precision = 0.1;
     }
 
-    auto parameters = DropGenerator::minimizeError(m_currentExperimentalModel, dropType, precision);
-    m_dropType->setCurrentIndex(parameters.dropType == DropGenerator::DropType::PENDANT ? 0 : 1);
-    m_inputb->setText(QString::number(parameters.b));
-    m_inputc->setText(QString::number(parameters.c));
-    m_inputprecision->setText(QString::number(parameters.precision));
-    visualiseTheoreticalModel();
+    QDialog waitingDialog(this);
+    QVBoxLayout *l = new QVBoxLayout;
+    QProgressBar *progressBar = new QProgressBar;
+    progressBar->setRange(0, 1000);
+    l->addWidget(new QLabel("Minimizing error..."), 0, Qt::AlignHCenter);
+    l->addWidget(progressBar);
+    waitingDialog.setLayout(l);
+
+    QThread *workerThread = new QThread(this);
+    Worker *worker = new Worker;
+    worker->moveToThread(workerThread);
+
+    connect(worker, &Worker::progressChanged, progressBar, [progressBar](double progress) {
+        progressBar->setValue(int(1000 * progress));
+    }, Qt::QueuedConnection);
+
+    QTimer singleShotTimer;
+    singleShotTimer.setSingleShot(true);
+    QObject::connect(
+                &singleShotTimer,
+                &QTimer::timeout,
+                worker,
+                [worker, this, dropType, precision]() {
+        worker->doWork(m_currentExperimentalModel, dropType, precision);
+    }, Qt::QueuedConnection);
+    workerThread->start();
+    singleShotTimer.start(0);
+
+    DropGenerator::TheoreticalModelParameters bestParameters;
+    connect(worker, &Worker::finished, this, &MainWindow::setBestTheoreticalModel, Qt::QueuedConnection);
+    connect(worker, &Worker::finished, &waitingDialog, &QDialog::accept, Qt::QueuedConnection);
+
+    waitingDialog.exec();
+
+    workerThread->quit();
+    workerThread->wait();
+    worker->deleteLater();
+    workerThread->deleteLater();
 }
 
 void MainWindow::selectExperimentalModel()
@@ -260,6 +295,15 @@ void MainWindow::setExperimentalModel(const QString &filePath)
     setSeries(m_experimentalSeries, points);
     m_currentExperimentalModel = points;
     updateErrorSeries();
+}
+
+void MainWindow::setBestTheoreticalModel(DropGenerator::TheoreticalModelParameters parameters)
+{
+    m_dropType->setCurrentIndex(parameters.dropType == DropGenerator::DropType::PENDANT ? 0 : 1);
+    m_inputb->setText(QString::number(parameters.b));
+    m_inputc->setText(QString::number(parameters.c));
+    m_inputprecision->setText(QString::number(parameters.precision));
+    visualiseTheoreticalModel();
 }
 
 void MainWindow::updateErrorSeries()
