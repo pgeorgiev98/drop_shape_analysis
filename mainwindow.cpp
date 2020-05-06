@@ -157,13 +157,12 @@ void MainWindow::setSeries(QLineSeries *series, const QVector<QPointF> &points)
     c->createDefaultAxes();
     QList<QAbstractAxis*> axesX= m_modelChart->chart()->axes(Qt::Horizontal);
     QList<QAbstractAxis*> axesY= m_modelChart->chart()->axes(Qt::Vertical);
-/*
+
     for(auto axisX : axesX)
         axisX->setRange(0, 1);
 
     for(auto axisY : axesY)
         axisY->setMin(0);
-        */
 }
 
 void MainWindow::visualiseTheoreticalModel()
@@ -281,7 +280,6 @@ void MainWindow::updateErrorSeries()
 void MainWindow::selectImage()
 {
     QSettings settings;
-    qDebug() << "hello";
     static const char *imageDirKey = "image-dir";
     QString dir = settings.value(imageDirKey, QString()).toString();
     QString fileName = QFileDialog::getOpenFileName(this, "Select image", dir);
