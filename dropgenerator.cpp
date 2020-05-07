@@ -184,16 +184,33 @@ QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
         qDebug() << "no";
         return {};
     }
-    auto white = QColorConstants::White;
-    auto black = QColorConstants::Black;
 
-    image.setPixelColor(0, 0, white);
+    double averageValue = 0;
     for(int i = 0; i < image.height(); ++i)
     {
         for(int j = 0; j < image.width(); ++j)
         {
-            QColor color = image.pixelColor(j, i);
-            if(color.valueF() < 0.4)
+            int r, g, b;
+            image.pixelColor(j, i).getRgb(&r, &g, &b);
+            double newColor;
+            newColor = 0.2126*r + 0.7152*g + 0.0722*b;
+            image.setPixelColor(j, i, QColor(newColor, newColor, newColor));
+            averageValue += image.pixelColor(j, i).valueF();
+        }
+    }
+
+    averageValue /= image.height()*image.width();
+
+    auto white = QColorConstants::White;
+    auto black = QColorConstants::Black;
+
+    for(int i = 0; i < image.height(); ++i)
+    {
+        double rowColorValue = image.pixelColor(0, i).valueF();
+        for(int j = 0; j < image.width(); ++j)
+        {
+            double value = image.pixelColor(j, i).valueF();
+            if(qAbs(value - rowColorValue) > qAbs(averageValue - rowColorValue))
             {
                 image.setPixelColor(j, i, black);
             }
@@ -204,17 +221,18 @@ QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
         }
     }
 
+    if(!image.save("/home/bibi/werkspace/kapki/drop_shape_analysis/drop_images/test_drop2.png"))
+        qDebug() << "image not saved";
+
     QVector<QPointF> drop;
-    int mostLeft = image.width(), apex = 0, apexY = 0;
+    int apex = 0, apexY = 0;
     for(int i = 0; i < image.height(); ++i)
     {
         for(int j = 0; j < image.width(); ++j)
         {
-            if(image.pixelColor(j, i).valueF() < 0.4)
+            if(image.pixelColor(j, i) == black)
             {
                 drop.append(QPointF(j, i));
-                if(j < mostLeft)
-                    mostLeft = j;
                 if(j > apex)
                 {
                     apex = j;
@@ -224,7 +242,8 @@ QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
             }
         }
     }
-    double scaleFactor = apex - mostLeft;
+    double pivot = drop[0].x();
+    double scaleFactor = apex - pivot;
 
     for(auto &point : drop)
     {
