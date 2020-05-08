@@ -280,7 +280,7 @@ QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
 
     QVector<QPointF> drop;
     int apex = 0, apexY = 0;
-    for(int i = 0; i < image.height(); ++i)
+    for(int i = image.height() - 1; i >= 0; --i)
     {
         for(int j = 0; j < image.width(); ++j)
         {
@@ -296,7 +296,7 @@ QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
             }
         }
     }
-    double pivot = drop[0].x();
+    double pivot = drop.last().x();
     double scaleFactor = apex - pivot;
 
     for(auto &point : drop)
