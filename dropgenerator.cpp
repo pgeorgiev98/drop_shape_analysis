@@ -278,9 +278,6 @@ QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
         }
     }
 
-    if(!image.save("/home/bibi/werkspace/kapki/drop_shape_analysis/drop_images/test_drop2.png"))
-        qDebug() << "image not saved";
-
     QVector<QPointF> drop;
     int apex = 0, apexY = 0;
     for(int i = 0; i < image.height(); ++i)
