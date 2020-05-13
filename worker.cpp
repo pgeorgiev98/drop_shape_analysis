@@ -8,12 +8,12 @@
 
 void Worker::doWork(const QVector<QPointF> &experimental, DropGenerator::DropType dropType, double precision, int cutoffMoment)
 {
-    const double minB =  0.5, maxB =  3.0;
-    const double minC = -6.0, maxC = -0.5;
+    const double minB =  0.1, maxB =  3.0;
+    const double minC = -6.0, maxC = 0.0;
 
     QQueue<QPair<double, double>> queue;
 
-    const int tableSizeB = 30, tableSizeC = 5;
+    const int tableSizeB = 100, tableSizeC = 15;
     for (int bi = 0; bi < tableSizeB; ++bi) {
         for (int ci = 0; ci < tableSizeC; ++ci) {
             double b = minB + bi * (maxB - minB) / tableSizeB;
