@@ -17,19 +17,19 @@ public:
         DropType dropType;
         double b, c;
         double precision;
+        int cutoffMoment;
 
-        TheoreticalModelParameters(DropType dropType, double b, double c, double precision)
-            : dropType(dropType), b(b), c(c), precision(precision)
+        TheoreticalModelParameters(DropType dropType, double b, double c, double precision, int cutoffMoment)
+            : dropType(dropType), b(b), c(c), precision(precision), cutoffMoment(cutoffMoment)
         {}
         TheoreticalModelParameters()
         {}
     };
 
-    static QVector<QPointF> generateTheoreticalModel(double b, double c, DropType type, double precision);
+    static QVector<QPointF> generateTheoreticalModel(double b, double c, DropType type, double precision, int cutoffMoment);
     static QVector<QPointF> generateError(const QVector<QPointF> &theoretical, const QVector<QPointF> &experimental);
     static double calculateError(const QVector<QPointF> &error);
     static double calculateError(const QVector<QPointF> &theoretical, const QVector<QPointF> &experimental);
-    static TheoreticalModelParameters calculateBestParameters(const QVector<QPointF> &experimental, DropType dropType, double precision);
     static QVector<QPointF> generateModelFromImage(const QString fileName);
 };
 

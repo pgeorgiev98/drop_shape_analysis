@@ -13,7 +13,7 @@ public:
     {}
 
 public slots:
-    void doWork(const QVector<QPointF> &experimental, DropGenerator::DropType dropType, double precision);
+    void doWork(const QVector<QPointF> &experimental, DropGenerator::DropType dropType, double precision, int cutoffMoment);
 
 signals:
     void finished(DropGenerator::TheoreticalModelParameters parameters);

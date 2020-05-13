@@ -40,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_theoreticalSeries(new QLineSeries)
     , m_experimentalSeries(new QLineSeries)
     , m_errorSeries(new QLineSeries)
+    , m_cutoffMoment(0)
 {
     const double minDouble = std::numeric_limits<double>::lowest();
     const double maxDouble = std::numeric_limits<double>::max();
@@ -197,7 +198,7 @@ void MainWindow::visualiseTheoreticalModel()
 
     auto dropType = m_dropType->currentIndex() == 0 ? DropGenerator::DropType::PENDANT : DropGenerator::DropType::SPINNING;
 
-    auto drop = DropGenerator::generateTheoreticalModel(b, c, dropType, h);
+    auto drop = DropGenerator::generateTheoreticalModel(b, c, dropType, h, m_cutoffMoment);
     if(drop.isEmpty())
     {
         QMessageBox::critical(this, "Error", "Maximum number of iterations reached");
@@ -249,7 +250,7 @@ void MainWindow::visualiseClosestTheoreticalModel()
                 &QTimer::timeout,
                 worker,
                 [worker, this, dropType, precision]() {
-        worker->doWork(m_currentExperimentalModel, dropType, precision);
+        worker->doWork(m_currentExperimentalModel, dropType, precision, m_cutoffMoment);
     }, Qt::QueuedConnection);
     workerThread->start();
     singleShotTimer.start(0);
@@ -311,6 +312,7 @@ void MainWindow::setExperimentalModel(const QString &filePath)
 
     setSeries(m_experimentalSeries, points);
     m_currentExperimentalModel = points;
+    updateCutoffMoment();
     updateErrorSeries();
 }
 
@@ -349,6 +351,18 @@ void MainWindow::selectImage()
         auto drop = DropGenerator::generateModelFromImage(fileName);
         setSeries(m_experimentalSeries, drop);
         m_currentExperimentalModel = drop;
+        updateCutoffMoment();
         updateErrorSeries();
+    }
+}
+
+void MainWindow::updateCutoffMoment()
+{
+    m_cutoffMoment = 0;
+    for (const QPointF &p : m_currentExperimentalModel) {
+        if (p.x() > 1.15) { // Magic number
+            m_cutoffMoment = 1;
+            break;
+        }
     }
 }

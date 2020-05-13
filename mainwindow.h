@@ -28,6 +28,7 @@ public slots:
     void setBestTheoreticalModel(DropGenerator::TheoreticalModelParameters parameters);
     void updateErrorSeries();
     void selectImage();
+    void updateCutoffMoment();
 
 private:
     QHBoxLayout *m_chartsLayout;
@@ -39,5 +40,6 @@ private:
     QtCharts::QLineSeries *m_experimentalSeries;
     QtCharts::QLineSeries *m_errorSeries;
     QVector<QPointF> m_currentTheoreticalModel, m_currentExperimentalModel;
+    int m_cutoffMoment;
 };
 #endif // MAINWINDOW_H
