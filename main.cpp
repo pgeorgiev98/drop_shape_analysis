@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+#include "backend.h"
 #include "dropgenerator.h"
 #include <QApplication>
 #include <QQmlApplicationEngine>
@@ -10,9 +10,8 @@ int main(int argc, char *argv[])
     a.setApplicationName("drop-shape-analysis");
     a.setOrganizationName("drop-shape-analysis");
     a.setOrganizationDomain("drop-shape-analysis.com");
-    qRegisterMetaType<DropGenerator::TheoreticalModelParameters>();
-    //MainWindow w;
-    //w.show();
+    qRegisterMetaType<TheoreticalModelParameters>();
+    qmlRegisterType<Backend>("DropShapeAnalysis.Backend", 1, 0, "Backend");
 
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/main.qml"));

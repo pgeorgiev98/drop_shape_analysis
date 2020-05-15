@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "theoreticalmodelparameters.h"
 #include "dropgenerator.h"
 
 #include <QMainWindow>
@@ -25,7 +26,7 @@ public slots:
     void visualiseClosestTheoreticalModel();
     void selectExperimentalModel();
     void setExperimentalModel(const QString &filePath);
-    void setBestTheoreticalModel(DropGenerator::TheoreticalModelParameters parameters);
+    void setBestTheoreticalModel(TheoreticalModelParameters parameters);
     void updateErrorSeries();
     void selectImage();
     void updateCutoffMoment();

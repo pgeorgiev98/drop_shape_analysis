@@ -3,6 +3,7 @@ import QtQuick.Window 2.14
 import QtQuick.Controls 2.14
 import QtCharts 2.14
 import QtQuick.Layouts 1.14
+import DropShapeAnalysis.Backend 1.0
 
 ApplicationWindow {
     id: root
@@ -12,6 +13,10 @@ ApplicationWindow {
     title: qsTr("Drop Shape Analysis")
 
     property bool isHorizontal: width / height > 1.5
+
+    Backend {
+        id: backend
+    }
 
     ScrollView {
         anchors.fill: parent
@@ -35,22 +40,26 @@ ApplicationWindow {
 
                     Label { text: "Type: " }
                     ComboBox {
+                        id: inputType
                         model: ["Pendant", "Rotating"]
                         Layout.fillWidth: true
                     }
 
                     Label { text: "Step: " }
                     TextField {
+                        id: inputStep
                         text: "0.1"
                     }
 
                     Label { text: "b: " }
                     TextField {
+                        id: inputB
                         text: "1.8"
                     }
 
                     Label { text: "c: " }
                     TextField {
+                        id: inputC
                         text: "-2.9"
                     }
 
@@ -58,6 +67,13 @@ ApplicationWindow {
                         text: "Generate theoretical profile"
                         Layout.columnSpan: 2
                         Layout.alignment: Qt.AlignCenter
+                        onClicked: {
+                            var b = inputB.text
+                            var c = inputC.text
+                            var step = inputStep.text
+                            var type = 0
+                            var profile = backend.generateTheoreticalProfile(b, c, type, step, 0, theoreticalSeries)
+                        }
                     }
 
                     Button {
@@ -90,48 +106,30 @@ ApplicationWindow {
                     currentIndex: tabBar.currentIndex
 
                     ChartView {
+                        id: profilesChart
                         theme: ChartView.ChartThemeLight
                         antialiasing: true
 
                         LineSeries {
+                            id: theoreticalSeries
                             color: "blue"
                             name: "Theoretical"
-                            XYPoint { x: 0; y: 0 }
-                            XYPoint { x: 1.1; y: 2.1 }
-                            XYPoint { x: 1.9; y: 3.3 }
-                            XYPoint { x: 2.1; y: 2.1 }
-                            XYPoint { x: 2.9; y: 4.9 }
-                            XYPoint { x: 3.4; y: 3.0 }
-                            XYPoint { x: 4.1; y: 3.3 }
                         }
 
                         LineSeries {
                             color: "green"
                             name: "Experimental"
-                            XYPoint { x: 0; y: 0 }
-                            XYPoint { x: 1.1; y: 2.2 }
-                            XYPoint { x: 1.9; y: 3.2 }
-                            XYPoint { x: 2.1; y: 2.2 }
-                            XYPoint { x: 2.9; y: 4.7 }
-                            XYPoint { x: 3.4; y: 3.2 }
-                            XYPoint { x: 4.1; y: 3.2 }
                         }
                     }
 
                     ChartView {
+                        id: errorChart
                         theme: ChartView.ChartThemeLight
                         antialiasing: true
 
                         LineSeries {
                             color: "red"
                             name: "Error"
-                            XYPoint { x: 0; y: 0 }
-                            XYPoint { x: 1.1; y: 2.1 }
-                            XYPoint { x: 1.9; y: 3.3 }
-                            XYPoint { x: 2.1; y: 2.1 }
-                            XYPoint { x: 2.9; y: 4.9 }
-                            XYPoint { x: 3.4; y: 3.0 }
-                            XYPoint { x: 4.1; y: 3.3 }
                         }
                     }
                 }

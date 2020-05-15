@@ -196,9 +196,10 @@ void MainWindow::visualiseTheoreticalModel()
     if (!precisionValid)
         h = 0.1;
 
-    auto dropType = m_dropType->currentIndex() == 0 ? DropGenerator::DropType::PENDANT : DropGenerator::DropType::SPINNING;
+    auto dropType = m_dropType->currentIndex() == 0 ? TheoreticalModelParameters::PENDANT : TheoreticalModelParameters::SPINNING;
 
-    auto drop = DropGenerator::generateTheoreticalModel(b, c, dropType, h, m_cutoffMoment);
+    TheoreticalModelParameters params(dropType, b, c, h, m_cutoffMoment);
+    auto drop = DropGenerator::generateTheoreticalModel(params);
     if(drop.isEmpty())
     {
         QMessageBox::critical(this, "Error", "Maximum number of iterations reached");
@@ -218,7 +219,7 @@ void MainWindow::visualiseClosestTheoreticalModel()
         return;
     }
 
-    const auto dropType = m_dropType->currentIndex() == 0 ? DropGenerator::DropType::PENDANT : DropGenerator::DropType::SPINNING;
+    const auto dropType = m_dropType->currentIndex() == 0 ? TheoreticalModelParameters::PENDANT : TheoreticalModelParameters::SPINNING;
     double precision;
     {
         bool precisionValid;
@@ -255,7 +256,7 @@ void MainWindow::visualiseClosestTheoreticalModel()
     workerThread->start();
     singleShotTimer.start(0);
 
-    DropGenerator::TheoreticalModelParameters bestParameters;
+    TheoreticalModelParameters bestParameters;
     connect(worker, &Worker::finished, this, &MainWindow::setBestTheoreticalModel, Qt::QueuedConnection);
     connect(worker, &Worker::finished, &waitingDialog, &QDialog::accept, Qt::QueuedConnection);
 
@@ -316,9 +317,9 @@ void MainWindow::setExperimentalModel(const QString &filePath)
     updateErrorSeries();
 }
 
-void MainWindow::setBestTheoreticalModel(DropGenerator::TheoreticalModelParameters parameters)
+void MainWindow::setBestTheoreticalModel(TheoreticalModelParameters parameters)
 {
-    m_dropType->setCurrentIndex(parameters.dropType == DropGenerator::DropType::PENDANT ? 0 : 1);
+    m_dropType->setCurrentIndex(parameters.dropType == TheoreticalModelParameters::PENDANT ? 0 : 1);
     m_inputb->setText(QString::number(parameters.b));
     m_inputc->setText(QString::number(parameters.c));
     m_inputprecision->setText(QString::number(parameters.precision));

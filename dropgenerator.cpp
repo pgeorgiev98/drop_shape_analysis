@@ -10,10 +10,16 @@
 #include <QVector>
 #include <QColor>
 
-QVector<QPointF> DropGenerator::generateTheoreticalModel(double b, double c, DropType type, double precision, int cutoffMoment)
+QVector<QPointF> DropGenerator::generateTheoreticalModel(TheoreticalModelParameters params)
 {
-    const int maximumXDirectionChanges = (type == DropType::PENDANT ? 2 : 1);
-    const int maximumYDirectionChanges = (type == DropType::PENDANT ? 0 : 1);
+    auto type = params.dropType;
+    auto b = params.b;
+    auto c = params.c;
+    auto cutoffMoment = params.cutoffMoment;
+    auto precision = params.precision;
+
+    const int maximumXDirectionChanges = (type == TheoreticalModelParameters::PENDANT ? 2 : 1);
+    const int maximumYDirectionChanges = (type == TheoreticalModelParameters::PENDANT ? 0 : 1);
     int xDirectionChanges = 0, yDirectionChanges = 0;
     double currentXDirection = 1, currentYDirection = 1; // Moving upwards to the right
     const int maximumPassesOver1 = cutoffMoment;
@@ -29,7 +35,7 @@ QVector<QPointF> DropGenerator::generateTheoreticalModel(double b, double c, Dro
     double currx = 0, nextx, currz = 0, nextz, currphi = 0, nextphi;
     int steps = 0, maxSteps = 5000;
 
-    if(type == DropType::PENDANT)
+    if(type == TheoreticalModelParameters::PENDANT)
     {
         while(steps <= maxSteps)
         {

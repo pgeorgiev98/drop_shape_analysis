@@ -4,9 +4,7 @@
 #include <QPair>
 #include <QDebug>
 
-#include <omp.h>
-
-void Worker::doWork(const QVector<QPointF> &experimental, DropGenerator::DropType dropType, double precision, int cutoffMoment)
+void Worker::doWork(const QVector<QPointF> &experimental, TheoreticalModelParameters::DropType dropType, double precision, int cutoffMoment)
 {
     const double minB =  0.1, maxB =  3.0;
     const double minC = -6.0, maxC = 0.0;
@@ -24,7 +22,7 @@ void Worker::doWork(const QVector<QPointF> &experimental, DropGenerator::DropTyp
 
     const double gdPrecision = 1e-3;
 
-    DropGenerator::TheoreticalModelParameters bestParameters(dropType, 0, 0, precision, cutoffMoment);
+    TheoreticalModelParameters bestParameters(dropType, 0, 0, precision, cutoffMoment);
     double bestError = qInf();
 
 #pragma omp parallel
@@ -38,7 +36,7 @@ void Worker::doWork(const QVector<QPointF> &experimental, DropGenerator::DropTyp
                 auto p = queue.dequeue();
                 b = p.first;
                 c = p.second;
-                int threadNum = omp_get_thread_num();
+                int threadNum = 0;
                 if (threadNum == 0) {
                     double progress = tableSizeB * tableSizeC - queue.size();
                     progress /= tableSizeB * tableSizeC;
@@ -50,7 +48,7 @@ void Worker::doWork(const QVector<QPointF> &experimental, DropGenerator::DropTyp
             break;
 
         auto f = [b, dropType, precision, cutoffMoment, &experimental](double c){
-            return DropGenerator::calculateError(DropGenerator::generateTheoreticalModel(b, c, dropType, precision, cutoffMoment), experimental);
+            return DropGenerator::calculateError(DropGenerator::generateTheoreticalModel(TheoreticalModelParameters(dropType, b, c, precision, cutoffMoment)), experimental);
         };
 
         auto der = [f](double c){
