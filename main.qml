@@ -134,7 +134,7 @@ ApplicationWindow {
                             var b = inputB.text
                             var c = inputC.text
                             var step = inputStep.text
-                            var type = 0
+                            var type = (inputType.currentText === "Pendant" ? 0 : 1)
                             var profile = backend.generateTheoreticalProfile(b, c, type, step, 0, theoreticalSeries)
                         }
                     }
