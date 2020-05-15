@@ -6,6 +6,7 @@
 #include <QString>
 #include <QVector>
 #include <QPointF>
+#include <QTemporaryDir>
 
 namespace QtCharts {
     class QAbstractSeries;
@@ -40,6 +41,9 @@ public slots:
     bool loadExperimentalFromImageFile(QString fileUrl);
     bool minimizeError(int dropType, double step);
 
+    QString getTempDir();
+    void setPhoto(QString path);
+
 private slots:
     void updateErrorSeries();
 
@@ -51,6 +55,8 @@ private:
     QString m_lastError;
     QVector<QPointF> m_theoreticalProfile;
     QVector<QPointF> m_experimentalProfile;
+
+    QTemporaryDir m_tempDir;
 };
 
 #endif // BACKEND_H

@@ -7,6 +7,7 @@
 #include <QTextStream>
 #include <QThread>
 #include <QTimer>
+#include <QImage>
 
 using namespace QtCharts;
 
@@ -193,4 +194,15 @@ bool Backend::minimizeError(int dropType, double step)
 
 
     return true;
+}
+
+QString Backend::getTempDir()
+{
+    return m_tempDir.path();
+}
+
+void Backend::setPhoto(QString path)
+{
+    QImage image(path);
+    // TODO
 }
