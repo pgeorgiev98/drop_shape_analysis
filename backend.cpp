@@ -4,8 +4,6 @@
 #include <QChart>
 #include <QFile>
 #include <QTextStream>
-#include <QVector>
-#include <QPointF>
 #include <QDebug>
 
 using namespace QtCharts;
@@ -54,6 +52,7 @@ void Backend::generateTheoreticalProfile(double b, double c,
     QXYSeries *s = static_cast<QXYSeries *>(series);
     TheoreticalModelParameters params(TheoreticalModelParameters::DropType(type), b, c, precision, cutoffMoment);
     auto v = DropGenerator::generateTheoreticalModel(params);
+    m_theoreticalProfile = v;
     s->replace(v);
 
     QChart *chart = s->chart();
@@ -98,6 +97,8 @@ bool Backend::loadExperimentalFromTextFile(QString fileUrl, QtCharts::QAbstractS
         return false;
     }
 
+    m_experimentalProfile = points;
+
     QXYSeries *s = static_cast<QXYSeries *>(series);
     s->replace(points);
     // TODO: update cutoff
@@ -112,6 +113,7 @@ bool Backend::loadExperimentalFromImageFile(QString fileUrl, QtCharts::QAbstract
 {
     QString filePath = QUrl(fileUrl).isLocalFile() ? QUrl(fileUrl).toLocalFile() : fileUrl;
     auto drop = DropGenerator::generateModelFromImage(filePath);
+    m_experimentalProfile = drop;
 
     QXYSeries *s = static_cast<QXYSeries *>(series);
     s->replace(drop);
@@ -121,4 +123,16 @@ bool Backend::loadExperimentalFromImageFile(QString fileUrl, QtCharts::QAbstract
     adjustAxes(chart);
 
     return true;
+}
+
+void Backend::updateErrorSeries(QAbstractSeries *errorSeries)
+{
+    QXYSeries *s = static_cast<QXYSeries *>(errorSeries);
+
+    auto error = DropGenerator::generateError(m_theoreticalProfile, m_experimentalProfile);
+
+    s->replace(error);
+
+    QChart *chart = s->chart();
+    adjustAxes(chart);
 }

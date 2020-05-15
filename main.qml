@@ -27,6 +27,8 @@ ApplicationWindow {
             if (!backend.loadExperimentalFromTextFile(fileUrl, experimentalSeries)) {
                 errorMessagePopup.errorMessage = backend.lastError()
                 errorMessagePopup.open()
+            } else {
+                backend.updateErrorSeries(errorSeries)
             }
         }
     }
@@ -39,6 +41,8 @@ ApplicationWindow {
             if (!backend.loadExperimentalFromImageFile(fileUrl, experimentalSeries)) {
                 errorMessagePopup.errorMessage = backend.lastError()
                 errorMessagePopup.open()
+            } else {
+                backend.updateErrorSeries(errorSeries)
             }
         }
     }
@@ -142,6 +146,7 @@ ApplicationWindow {
                         antialiasing: true
 
                         LineSeries {
+                            id: errorSeries
                             color: "red"
                             name: "Error"
                         }
@@ -213,7 +218,8 @@ ApplicationWindow {
                             var c = inputC.text
                             var step = inputStep.text
                             var type = (inputType.currentText === "Pendant" ? 0 : 1)
-                            var profile = backend.generateTheoreticalProfile(b, c, type, step, 0, theoreticalSeries)
+                            backend.generateTheoreticalProfile(b, c, type, step, 0, theoreticalSeries)
+                            backend.updateErrorSeries(errorSeries)
                         }
                     }
 
