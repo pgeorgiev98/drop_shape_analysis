@@ -176,12 +176,14 @@ ApplicationWindow {
                             id: qtheoreticalSeries
                             color: "blue"
                             name: "Theoretical"
+                            width: 2
                         }
 
                         LineSeries {
                             id: qexperimentalSeries
                             color: "green"
                             name: "Experimental"
+                            width: 2
                         }
                     }
 
@@ -194,6 +196,7 @@ ApplicationWindow {
                             id: qerrorSeries
                             color: "red"
                             name: "Error"
+                            width: 2
                         }
                     }
                 }
