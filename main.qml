@@ -109,18 +109,21 @@ ApplicationWindow {
                     TextField {
                         id: inputStep
                         text: "0.1"
+                        inputMethodHints: Qt.ImhFormattedNumbersOnly
                     }
 
                     Label { text: "b: " }
                     TextField {
                         id: inputB
                         text: "1.8"
+                        inputMethodHints: Qt.ImhFormattedNumbersOnly
                     }
 
                     Label { text: "c: " }
                     TextField {
                         id: inputC
                         text: "-2.9"
+                        inputMethodHints: Qt.ImhFormattedNumbersOnly
                     }
 
                     Button {
