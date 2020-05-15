@@ -2,6 +2,10 @@
 #include "dropgenerator.h"
 #include <QXYSeries>
 #include <QChart>
+#include <QFile>
+#include <QTextStream>
+#include <QVector>
+#include <QPointF>
 #include <QDebug>
 
 using namespace QtCharts;
@@ -11,19 +15,8 @@ Backend::Backend(QObject *parent)
 {
 }
 
-void Backend::generateTheoreticalProfile(double b, double c,
-                                         int type,
-                                         double precision, int cutoffMoment,
-                                         QAbstractSeries *series)
+static void adjustAxes(QChart *chart)
 {
-    QXYSeries *s = static_cast<QXYSeries *>(series);
-    TheoreticalModelParameters params(TheoreticalModelParameters::DropType(type), b, c, precision, cutoffMoment);
-    auto v = DropGenerator::generateTheoreticalModel(params);
-    s->replace(v);
-
-    // Adjust axes to fit
-
-    QChart *chart = s->chart();
     chart->createDefaultAxes();
 
     QList<QAbstractAxis*> axesX= chart->axes(Qt::Horizontal);
@@ -51,4 +44,81 @@ void Backend::generateTheoreticalProfile(double b, double c,
         axisX->setRange(0, maxX);
     for(auto axisY : axesY)
         axisY->setRange(0, maxY);
+}
+
+void Backend::generateTheoreticalProfile(double b, double c,
+                                         int type,
+                                         double precision, int cutoffMoment,
+                                         QAbstractSeries *series)
+{
+    QXYSeries *s = static_cast<QXYSeries *>(series);
+    TheoreticalModelParameters params(TheoreticalModelParameters::DropType(type), b, c, precision, cutoffMoment);
+    auto v = DropGenerator::generateTheoreticalModel(params);
+    s->replace(v);
+
+    QChart *chart = s->chart();
+    adjustAxes(chart);
+}
+
+bool Backend::loadExperimentalFromTextFile(QString fileUrl, QtCharts::QAbstractSeries *series)
+{
+    QString filePath = QUrl(fileUrl).isLocalFile() ? QUrl(fileUrl).toLocalFile() : fileUrl;
+    static auto expectChar = [](QTextStream &in, char c) -> bool {
+        char ch;
+        in >> ch;
+        return c == ch;
+    };
+
+    QFile f(filePath);
+    if (!f.open(QIODevice::ReadOnly)) {
+        m_lastError = QString("Failed to open file %1: %2").arg(filePath).arg(f.errorString());
+        return false;
+    }
+    QTextStream in(&f);
+    QVector<QPointF> points;
+    try {
+        if (!expectChar(in, '{'))
+            throw "";
+        while (!in.atEnd()) {
+            if (!expectChar(in, '{'))
+                throw "";
+            double x, y;
+            in >> x;
+            if (!expectChar(in, ','))
+                throw "";
+            in >> y;
+            if (!expectChar(in, '}'))
+                throw "";
+            points.append(QPointF(x, y));
+            if (!expectChar(in, ','))
+                break;
+        }
+    } catch(...) {
+        m_lastError = "File format error";
+        return false;
+    }
+
+    QXYSeries *s = static_cast<QXYSeries *>(series);
+    s->replace(points);
+    // TODO: update cutoff
+
+    QChart *chart = s->chart();
+    adjustAxes(chart);
+
+    return true;
+}
+
+bool Backend::loadExperimentalFromImageFile(QString fileUrl, QtCharts::QAbstractSeries *series)
+{
+    QString filePath = QUrl(fileUrl).isLocalFile() ? QUrl(fileUrl).toLocalFile() : fileUrl;
+    auto drop = DropGenerator::generateModelFromImage(filePath);
+
+    QXYSeries *s = static_cast<QXYSeries *>(series);
+    s->replace(drop);
+    // TODO: update cutoff
+
+    QChart *chart = s->chart();
+    adjustAxes(chart);
+
+    return true;
 }

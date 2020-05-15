@@ -3,6 +3,7 @@ import QtQuick.Window 2.14
 import QtQuick.Controls 2.14
 import QtCharts 2.14
 import QtQuick.Layouts 1.14
+import QtQuick.Dialogs 1.2
 import DropShapeAnalysis.Backend 1.0
 
 ApplicationWindow {
@@ -16,6 +17,82 @@ ApplicationWindow {
 
     Backend {
         id: backend
+    }
+
+    FileDialog {
+        id: textFileDialog
+        selectExisting: true
+
+        onAccepted: {
+            if (!backend.loadExperimentalFromTextFile(fileUrl, experimentalSeries)) {
+                errorMessagePopup.errorMessage = backend.lastError()
+                errorMessagePopup.open()
+            }
+        }
+    }
+
+    FileDialog {
+        id: imageFileDialog
+        selectExisting: true
+
+        onAccepted: {
+            if (!backend.loadExperimentalFromImageFile(fileUrl, experimentalSeries)) {
+                errorMessagePopup.errorMessage = backend.lastError()
+                errorMessagePopup.open()
+            }
+        }
+    }
+
+    Popup {
+        id: errorMessagePopup
+        anchors.centerIn: parent
+        property string errorMessage: ""
+        ColumnLayout {
+            anchors.fill: parent
+            Label {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.maximumWidth: root.width * 0.8
+                color: "red"
+                text: errorMessagePopup.errorMessage
+                wrapMode: Text.WordWrap
+            }
+            Button {
+                Layout.alignment: Qt.AlignHCenter
+                text: "Ok"
+                onClicked: {
+                    errorMessagePopup.close()
+                }
+            }
+        }
+    }
+
+    Popup {
+        id: experimentalSelectPopup
+        anchors.centerIn: parent
+        modal: true
+        ColumnLayout {
+            ToolButton {
+                text: "Open text file"
+                onClicked: {
+                    experimentalSelectPopup.close()
+                    textFileDialog.open();
+                }
+            }
+            ToolButton {
+                text: "Open image/photo"
+                onClicked: {
+                    experimentalSelectPopup.close()
+                    imageFileDialog.open();
+                }
+            }
+            ToolButton {
+                text: "Take photo"
+                onClicked: {
+                    experimentalSelectPopup.close()
+                    // TODO
+                }
+            }
+        }
     }
 
     ScrollView {
@@ -53,6 +130,7 @@ ApplicationWindow {
                         }
 
                         LineSeries {
+                            id: experimentalSeries
                             color: "green"
                             name: "Experimental"
                         }
@@ -149,6 +227,10 @@ ApplicationWindow {
                         text: "Load experimental"
                         Layout.columnSpan: isHorizontal ? 2 : 4
                         Layout.alignment: Qt.AlignCenter
+
+                        onClicked: {
+                            experimentalSelectPopup.open()
+                        }
                     }
                 }
             }
