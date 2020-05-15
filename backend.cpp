@@ -13,6 +13,21 @@ Backend::Backend(QObject *parent)
 {
 }
 
+void Backend::setTheoreticalSeries(QtCharts::QAbstractSeries *series)
+{
+    m_theoretical = static_cast<QXYSeries *>(series);
+}
+
+void Backend::setExperimentalSeries(QtCharts::QAbstractSeries *series)
+{
+    m_experimental = static_cast<QXYSeries *>(series);
+}
+
+void Backend::setErrorSeries(QtCharts::QAbstractSeries *series)
+{
+    m_error = static_cast<QXYSeries *>(series);
+}
+
 static void adjustAxes(QChart *chart)
 {
     chart->createDefaultAxes();
@@ -46,20 +61,20 @@ static void adjustAxes(QChart *chart)
 
 void Backend::generateTheoreticalProfile(double b, double c,
                                          int type,
-                                         double precision, int cutoffMoment,
-                                         QAbstractSeries *series)
+                                         double precision, int cutoffMoment)
 {
-    QXYSeries *s = static_cast<QXYSeries *>(series);
     TheoreticalModelParameters params(TheoreticalModelParameters::DropType(type), b, c, precision, cutoffMoment);
     auto v = DropGenerator::generateTheoreticalModel(params);
     m_theoreticalProfile = v;
-    s->replace(v);
+    m_theoretical->replace(v);
 
-    QChart *chart = s->chart();
+    QChart *chart = m_theoretical->chart();
     adjustAxes(chart);
+
+    updateErrorSeries();
 }
 
-bool Backend::loadExperimentalFromTextFile(QString fileUrl, QtCharts::QAbstractSeries *series)
+bool Backend::loadExperimentalFromTextFile(QString fileUrl)
 {
     QString filePath = QUrl(fileUrl).isLocalFile() ? QUrl(fileUrl).toLocalFile() : fileUrl;
     static auto expectChar = [](QTextStream &in, char c) -> bool {
@@ -99,40 +114,45 @@ bool Backend::loadExperimentalFromTextFile(QString fileUrl, QtCharts::QAbstractS
 
     m_experimentalProfile = points;
 
-    QXYSeries *s = static_cast<QXYSeries *>(series);
-    s->replace(points);
+    m_experimental->replace(points);
     // TODO: update cutoff
 
-    QChart *chart = s->chart();
+    QChart *chart = m_experimental->chart();
     adjustAxes(chart);
+
+    updateErrorSeries();
 
     return true;
 }
 
-bool Backend::loadExperimentalFromImageFile(QString fileUrl, QtCharts::QAbstractSeries *series)
+bool Backend::loadExperimentalFromImageFile(QString fileUrl)
 {
     QString filePath = QUrl(fileUrl).isLocalFile() ? QUrl(fileUrl).toLocalFile() : fileUrl;
     auto drop = DropGenerator::generateModelFromImage(filePath);
     m_experimentalProfile = drop;
 
-    QXYSeries *s = static_cast<QXYSeries *>(series);
-    s->replace(drop);
+    m_experimental->replace(drop);
     // TODO: update cutoff
 
-    QChart *chart = s->chart();
+    QChart *chart = m_experimental->chart();
     adjustAxes(chart);
+
+    updateErrorSeries();
 
     return true;
 }
 
-void Backend::updateErrorSeries(QAbstractSeries *errorSeries)
+void Backend::updateErrorSeries()
 {
-    QXYSeries *s = static_cast<QXYSeries *>(errorSeries);
-
     auto error = DropGenerator::generateError(m_theoreticalProfile, m_experimentalProfile);
 
-    s->replace(error);
+    m_error->replace(error);
 
-    QChart *chart = s->chart();
+    QChart *chart = m_error->chart();
     adjustAxes(chart);
+}
+
+void Backend::minimizeError()
+{
+
 }

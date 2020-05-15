@@ -17,6 +17,9 @@ ApplicationWindow {
 
     Backend {
         id: backend
+        experimentalSeries: qexperimentalSeries
+        theoreticalSeries: qtheoreticalSeries
+        errorSeries: qerrorSeries
     }
 
     FileDialog {
@@ -24,11 +27,9 @@ ApplicationWindow {
         selectExisting: true
 
         onAccepted: {
-            if (!backend.loadExperimentalFromTextFile(fileUrl, experimentalSeries)) {
+            if (!backend.loadExperimentalFromTextFile(fileUrl)) {
                 errorMessagePopup.errorMessage = backend.lastError()
                 errorMessagePopup.open()
-            } else {
-                backend.updateErrorSeries(errorSeries)
             }
         }
     }
@@ -38,11 +39,9 @@ ApplicationWindow {
         selectExisting: true
 
         onAccepted: {
-            if (!backend.loadExperimentalFromImageFile(fileUrl, experimentalSeries)) {
+            if (!backend.loadExperimentalFromImageFile(fileUrl)) {
                 errorMessagePopup.errorMessage = backend.lastError()
                 errorMessagePopup.open()
-            } else {
-                backend.updateErrorSeries(errorSeries)
             }
         }
     }
@@ -128,13 +127,13 @@ ApplicationWindow {
                         antialiasing: true
 
                         LineSeries {
-                            id: theoreticalSeries
+                            id: qtheoreticalSeries
                             color: "blue"
                             name: "Theoretical"
                         }
 
                         LineSeries {
-                            id: experimentalSeries
+                            id: qexperimentalSeries
                             color: "green"
                             name: "Experimental"
                         }
@@ -146,7 +145,7 @@ ApplicationWindow {
                         antialiasing: true
 
                         LineSeries {
-                            id: errorSeries
+                            id: qerrorSeries
                             color: "red"
                             name: "Error"
                         }
@@ -218,8 +217,7 @@ ApplicationWindow {
                             var c = inputC.text
                             var step = inputStep.text
                             var type = (inputType.currentText === "Pendant" ? 0 : 1)
-                            backend.generateTheoreticalProfile(b, c, type, step, 0, theoreticalSeries)
-                            backend.updateErrorSeries(errorSeries)
+                            backend.generateTheoreticalProfile(b, c, type, step, 0)
                         }
                     }
 
