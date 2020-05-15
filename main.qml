@@ -20,6 +20,19 @@ ApplicationWindow {
         experimentalSeries: qexperimentalSeries
         theoreticalSeries: qtheoreticalSeries
         errorSeries: qerrorSeries
+
+        onProgressChanged: {
+            progressPopup.progress = progress
+        }
+
+        onOperationCompleted: {
+            progressPopup.close()
+            inputB.text = b.toFixed(8);
+            inputC.text = c.toFixed(8);
+            var step = inputStep.text
+            var type = (inputType.currentText === "Pendant" ? 0 : 1)
+            backend.generateTheoreticalProfile(b, c, type, step, 0)
+        }
     }
 
     FileDialog {
@@ -42,6 +55,39 @@ ApplicationWindow {
             if (!backend.loadExperimentalFromImageFile(fileUrl)) {
                 errorMessagePopup.errorMessage = backend.lastError()
                 errorMessagePopup.open()
+            }
+        }
+    }
+
+    Popup {
+        property real progress: 0.0
+
+        id: progressPopup
+        anchors.centerIn: parent
+        width: parent.width * 0.8
+        modal: true
+
+        ColumnLayout {
+            anchors.fill: parent
+            Label {
+                Layout.alignment: Qt.AlignCenter
+                text: "Calculating: " + Math.ceil(100 * progressPopup.progress) + "%"
+            }
+            ProgressBar {
+                Layout.alignment: Qt.AlignCenter
+                Layout.fillWidth: true
+                from: 0
+                to: 1
+                value: progressPopup.progress
+                indeterminate: false
+            }
+            Button {
+                Layout.alignment: Qt.AlignCenter
+                text: "Cancel"
+
+                onClicked: {
+                    // TODO
+                }
             }
         }
     }
@@ -225,6 +271,17 @@ ApplicationWindow {
                         text: "Minimize theoretical error"
                         Layout.columnSpan: 2
                         Layout.alignment: Qt.AlignCenter
+
+                        onClicked: {
+                            var step = inputStep.text
+                            var type = (inputType.currentText === "Pendant" ? 0 : 1)
+                            if (backend.minimizeError(type, step)) {
+                                progressPopup.open()
+                            } else {
+                                errorMessagePopup.errorMessage = backend.lastError()
+                                errorMessagePopup.open()
+                            }
+                        }
                     }
 
                     Button {

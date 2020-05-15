@@ -1,10 +1,12 @@
 #include "backend.h"
 #include "dropgenerator.h"
+#include "worker.h"
 #include <QXYSeries>
 #include <QChart>
 #include <QFile>
 #include <QTextStream>
-#include <QDebug>
+#include <QThread>
+#include <QTimer>
 
 using namespace QtCharts;
 
@@ -152,7 +154,43 @@ void Backend::updateErrorSeries()
     adjustAxes(chart);
 }
 
-void Backend::minimizeError()
+bool Backend::minimizeError(int dropType, double step)
 {
+    if (m_experimentalProfile.isEmpty()) {
+        m_lastError = "An experimental profile must be loaded first";
+        return false;
+    }
 
+    QThread *workerThread = new QThread(this);
+    Worker *worker = new Worker;
+    worker->moveToThread(workerThread);
+
+    connect(worker, &Worker::progressChanged, this, &Backend::progressChanged, Qt::QueuedConnection);
+
+    QTimer *singleShotTimer = new QTimer(this);
+    singleShotTimer->setSingleShot(true);
+    QObject::connect(
+                singleShotTimer,
+                &QTimer::timeout,
+                worker,
+                [worker, this, dropType, step]() {
+        worker->doWork(m_experimentalProfile, TheoreticalModelParameters::DropType(dropType), step, 0); // TODO: cutoffMoment
+    }, Qt::QueuedConnection);
+    workerThread->start();
+    singleShotTimer->start(0);
+
+    TheoreticalModelParameters bestParameters;
+    connect(worker, &Worker::finished, [this, worker, workerThread](TheoreticalModelParameters params) {
+        emit operationCompleted(params.b, params.c);
+    });
+
+    connect(worker, &Worker::finished, this, [workerThread, worker]() {
+        workerThread->quit();
+        workerThread->wait();
+        worker->deleteLater();
+        workerThread->deleteLater();
+    });
+
+
+    return true;
 }

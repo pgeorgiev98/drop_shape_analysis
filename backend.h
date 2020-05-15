@@ -23,7 +23,7 @@ public:
 
 signals:
     void progressChanged(double progress);
-    void operationCompleted();
+    void operationCompleted(double b, double c);
 
 public slots:
     QString lastError() const
@@ -38,7 +38,7 @@ public slots:
     void generateTheoreticalProfile(double b, double c, int type, double precision, int cutoffMoment);
     bool loadExperimentalFromTextFile(QString fileUrl);
     bool loadExperimentalFromImageFile(QString fileUrl);
-    void minimizeError();
+    bool minimizeError(int dropType, double step);
 
 private slots:
     void updateErrorSeries();
