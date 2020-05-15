@@ -27,6 +27,66 @@ ApplicationWindow {
             columns: isHorizontal ? 2 : 1
 
             Item {
+                clip: true
+                Layout.minimumWidth: Math.min(root.height, root.width)
+                Layout.minimumHeight: Math.min(root.height, root.width)
+                Layout.preferredWidth: (isHorizontal ? root.width - controls.width : root.width) - 16
+                Layout.preferredHeight: (isHorizontal ? root.height : root.height - controls.height) - 16
+
+                SwipeView {
+                    id: view
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    width: parent.width
+                    height: parent.height - tabBar.height
+                    currentIndex: tabBar.currentIndex
+
+                    ChartView {
+                        id: profilesChart
+                        theme: ChartView.ChartThemeLight
+                        antialiasing: true
+
+                        LineSeries {
+                            id: theoreticalSeries
+                            color: "blue"
+                            name: "Theoretical"
+                        }
+
+                        LineSeries {
+                            color: "green"
+                            name: "Experimental"
+                        }
+                    }
+
+                    ChartView {
+                        id: errorChart
+                        theme: ChartView.ChartThemeLight
+                        antialiasing: true
+
+                        LineSeries {
+                            color: "red"
+                            name: "Error"
+                        }
+                    }
+                }
+
+                TabBar {
+                    id: tabBar
+                    currentIndex: view.currentIndex
+                    anchors.bottom: view.top
+                    anchors.left: view.left
+                    width: view.width
+
+                    TabButton {
+                        text: "Profiles"
+                    }
+                    TabButton {
+                        text: "Error"
+                    }
+                }
+            }
+
+            Item {
                 property real margin: 16
                 id: controls
                 Layout.alignment: Qt.AlignCenter
@@ -89,69 +149,6 @@ ApplicationWindow {
                     }
                 }
             }
-
-            Item {
-                clip: true
-                Layout.minimumWidth: Math.min(root.height, root.width)
-                Layout.minimumHeight: Math.min(root.height, root.width)
-                Layout.preferredWidth: (isHorizontal ? root.width - controls.width : root.width) - 16
-                Layout.preferredHeight: (isHorizontal ? root.height : root.height - controls.height) - 16
-
-                SwipeView {
-                    id: view
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    width: parent.width
-                    height: parent.height - tabBar.height
-                    currentIndex: tabBar.currentIndex
-
-                    ChartView {
-                        id: profilesChart
-                        theme: ChartView.ChartThemeLight
-                        antialiasing: true
-
-                        LineSeries {
-                            id: theoreticalSeries
-                            color: "blue"
-                            name: "Theoretical"
-                        }
-
-                        LineSeries {
-                            color: "green"
-                            name: "Experimental"
-                        }
-                    }
-
-                    ChartView {
-                        id: errorChart
-                        theme: ChartView.ChartThemeLight
-                        antialiasing: true
-
-                        LineSeries {
-                            color: "red"
-                            name: "Error"
-                        }
-                    }
-                }
-
-                TabBar {
-                    id: tabBar
-                    currentIndex: view.currentIndex
-                    anchors.top: view.bottom
-                    anchors.left: view.left
-                    width: view.width
-
-                    TabButton {
-                        text: "Profiles"
-                    }
-                    TabButton {
-                        text: "Error"
-                    }
-                }
-            }
         }
     }
-
-
-
 }
