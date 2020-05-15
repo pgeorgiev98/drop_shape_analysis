@@ -181,7 +181,7 @@ bool Backend::minimizeError(int dropType, double step)
     singleShotTimer->start(0);
 
     TheoreticalModelParameters bestParameters;
-    connect(worker, &Worker::finished, [this, worker, workerThread](TheoreticalModelParameters params) {
+    connect(worker, &Worker::finished, [this](TheoreticalModelParameters params) {
         emit operationCompleted(params.b, params.c);
     });
 
