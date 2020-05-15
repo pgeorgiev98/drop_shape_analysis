@@ -1,11 +1,14 @@
 #include "worker.h"
 
+#include <QCoreApplication>
 #include <QQueue>
 #include <QPair>
 #include <QDebug>
 
 void Worker::doWork(const QVector<QPointF> &experimental, TheoreticalModelParameters::DropType dropType, double precision, int cutoffMoment)
 {
+    m_canceled = false;
+
     const double minB =  0.1, maxB =  3.0;
     const double minC = -6.0, maxC = 0.0;
 
@@ -38,10 +41,13 @@ void Worker::doWork(const QVector<QPointF> &experimental, TheoreticalModelParame
                 c = p.second;
                 int threadNum = 0;
                 if (threadNum == 0) {
+                    QCoreApplication::processEvents();
                     double progress = tableSizeB * tableSizeC - queue.size();
                     progress /= tableSizeB * tableSizeC;
                     emit progressChanged(progress);
                 }
+                if (m_canceled)
+                    break;
             }
         }
         if (queueIsEmpty)
@@ -94,5 +100,13 @@ void Worker::doWork(const QVector<QPointF> &experimental, TheoreticalModelParame
         }
     }
 
-    emit finished(bestParameters);
+    if (m_canceled)
+        emit canceled();
+    else
+        emit finished(bestParameters);
+}
+
+void Worker::cancel()
+{
+    m_canceled = true;
 }

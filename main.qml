@@ -26,11 +26,15 @@ ApplicationWindow {
 
         onOperationCompleted: {
             progressPopup.close()
-            inputB.text = b.toFixed(8);
-            inputC.text = c.toFixed(8);
-            var step = inputStep.text
-            var type = (inputType.currentText === "Pendant" ? 0 : 1)
-            backend.generateTheoreticalProfile(b, c, type, step, 0)
+            mainView.setB(b)
+            mainView.setC(c)
+            mainView.generateTheoreticalProfile()
+        }
+
+        onOperationCanceled: {
+            progressPopup.close()
+            cancelButton.text = "Cancel"
+            cancelButton.enabled = true
         }
     }
 
@@ -65,6 +69,7 @@ ApplicationWindow {
         anchors.centerIn: parent
         width: parent.width * 0.8
         modal: true
+        closePolicy: Popup.NoAutoClose
 
         ColumnLayout {
             anchors.fill: parent
@@ -81,11 +86,14 @@ ApplicationWindow {
                 indeterminate: false
             }
             Button {
+                id: cancelButton
                 Layout.alignment: Qt.AlignCenter
                 text: "Cancel"
 
                 onClicked: {
-                    // TODO
+                    backend.cancelOperation()
+                    text = "Cancelling..."
+                    enabled = false
                 }
             }
         }

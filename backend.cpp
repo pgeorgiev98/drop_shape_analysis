@@ -13,6 +13,8 @@ using namespace QtCharts;
 
 Backend::Backend(QObject *parent)
     : QObject(parent)
+    , m_operationThread(nullptr)
+    , m_worker(nullptr)
 {
 }
 
@@ -162,38 +164,55 @@ bool Backend::minimizeError(int dropType, double step)
         return false;
     }
 
-    QThread *workerThread = new QThread(this);
-    Worker *worker = new Worker;
-    worker->moveToThread(workerThread);
+    m_operationThread = new QThread(this);
+    m_worker = new Worker;
+    m_worker->moveToThread(m_operationThread);
 
-    connect(worker, &Worker::progressChanged, this, &Backend::progressChanged, Qt::QueuedConnection);
+    connect(m_worker, &Worker::progressChanged, this, &Backend::progressChanged, Qt::QueuedConnection);
 
     QTimer *singleShotTimer = new QTimer(this);
     singleShotTimer->setSingleShot(true);
     QObject::connect(
                 singleShotTimer,
                 &QTimer::timeout,
-                worker,
-                [worker, this, dropType, step]() {
-        worker->doWork(m_experimentalProfile, TheoreticalModelParameters::DropType(dropType), step, 0); // TODO: cutoffMoment
+                m_worker,
+                [this, dropType, step]() {
+        m_worker->doWork(m_experimentalProfile, TheoreticalModelParameters::DropType(dropType), step, 0); // TODO: cutoffMoment
     }, Qt::QueuedConnection);
-    workerThread->start();
+    m_operationThread->start();
     singleShotTimer->start(0);
 
     TheoreticalModelParameters bestParameters;
-    connect(worker, &Worker::finished, [this](TheoreticalModelParameters params) {
+    connect(m_worker, &Worker::finished, this, [this](TheoreticalModelParameters params) {
         emit operationCompleted(params.b, params.c);
-    });
+    }, Qt::QueuedConnection);
 
-    connect(worker, &Worker::finished, this, [workerThread, worker]() {
-        workerThread->quit();
-        workerThread->wait();
-        worker->deleteLater();
-        workerThread->deleteLater();
-    });
+    auto destroyWorker = [this]() {
+        m_operationThread->quit();
+        m_operationThread->wait();
+        m_worker->deleteLater();
+        m_operationThread->deleteLater();
+        m_worker = nullptr;
+        m_operationThread = nullptr;
+    };
 
+    connect(m_worker, &Worker::finished, this, destroyWorker, Qt::QueuedConnection);
+
+    connect(m_worker, &Worker::canceled, this, destroyWorker, Qt::QueuedConnection);
+    connect(m_worker, &Worker::canceled, this, &Backend::operationCanceled, Qt::QueuedConnection);
 
     return true;
+}
+
+#include <QDebug>
+void Backend::cancelOperation()
+{
+    if (m_worker && m_operationThread) {
+        QTimer *timer = new QTimer(this);
+        timer->setSingleShot(true);
+        connect(timer, &QTimer::timeout, m_worker, &Worker::cancel, Qt::QueuedConnection);
+        timer->start(0);
+    }
 }
 
 QString Backend::getTempDir()
@@ -204,5 +223,6 @@ QString Backend::getTempDir()
 void Backend::setPhoto(QString path)
 {
     QImage image(path);
+    qDebug() << image;
     // TODO
 }

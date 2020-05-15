@@ -13,6 +13,8 @@ namespace QtCharts {
     class QXYSeries;
 }
 
+class Worker;
+
 class Backend : public QObject
 {
     Q_OBJECT
@@ -25,6 +27,7 @@ public:
 signals:
     void progressChanged(double progress);
     void operationCompleted(double b, double c);
+    void operationCanceled();
 
 public slots:
     QString lastError() const
@@ -41,6 +44,8 @@ public slots:
     bool loadExperimentalFromImageFile(QString fileUrl);
     bool minimizeError(int dropType, double step);
 
+    void cancelOperation();
+
     QString getTempDir();
     void setPhoto(QString path);
 
@@ -55,6 +60,9 @@ private:
     QString m_lastError;
     QVector<QPointF> m_theoreticalProfile;
     QVector<QPointF> m_experimentalProfile;
+
+    QThread *m_operationThread;
+    Worker *m_worker;
 
     QTemporaryDir m_tempDir;
 };

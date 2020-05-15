@@ -15,10 +15,15 @@ public:
 
 public slots:
     void doWork(const QVector<QPointF> &experimental, TheoreticalModelParameters::DropType dropType, double precision, int cutoffMoment);
+    void cancel();
 
 signals:
     void finished(TheoreticalModelParameters parameters);
     void progressChanged(double progress);
+    void canceled();
+
+private:
+    bool m_canceled;
 };
 
 #endif // WORKER_H
