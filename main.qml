@@ -128,6 +128,7 @@ ApplicationWindow {
         modal: true
         ColumnLayout {
             ToolButton {
+                Layout.fillWidth: true
                 text: "Open text file"
                 onClicked: {
                     experimentalSelectPopup.close()
@@ -135,6 +136,7 @@ ApplicationWindow {
                 }
             }
             ToolButton {
+                Layout.fillWidth: true
                 text: "Open image/photo"
                 onClicked: {
                     experimentalSelectPopup.close()
@@ -142,6 +144,7 @@ ApplicationWindow {
                 }
             }
             ToolButton {
+                Layout.fillWidth: true
                 text: "Take photo"
                 onClicked: {
                     experimentalSelectPopup.close()
