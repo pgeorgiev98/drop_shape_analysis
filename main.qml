@@ -3,14 +3,18 @@ import QtQuick.Window 2.14
 import QtQuick.Controls 2.14
 import QtQuick.Layouts 1.14
 import QtQuick.Dialogs 1.2
+import QtQuick.Controls.Material 2.14
 import DropShapeAnalysis.Backend 1.0
 
 ApplicationWindow {
-    id: root
+    id: window
     visible: true
     width: 800
-    height: 480
+    height: 500
     title: qsTr("Drop Shape Analysis")
+    property int configuredTheme: Material.Light
+    property int currentTheme: Material.Light
+    Material.theme: currentTheme
 
     property bool isHorizontal: width / height > 1.5
 
@@ -107,8 +111,8 @@ ApplicationWindow {
             anchors.fill: parent
             Label {
                 Layout.alignment: Qt.AlignHCenter
-                Layout.maximumWidth: root.width * 0.8
-                color: "red"
+                Layout.maximumWidth: window.width * 0.8
+                color: Material.color(Material.red)
                 text: errorMessagePopup.errorMessage
                 wrapMode: Text.WordWrap
             }
@@ -149,6 +153,7 @@ ApplicationWindow {
                 onClicked: {
                     experimentalSelectPopup.close()
                     stackView.push(cameraItem)
+                    window.currentTheme = Material.Dark
                 }
             }
         }
@@ -166,6 +171,7 @@ ApplicationWindow {
                     if (cameraItem.previewing) {
                         cameraItem.closePreview()
                     } else {
+                        window.currentTheme = window.configuredTheme
                         stackView.pop()
                     }
                     event.accepted = true

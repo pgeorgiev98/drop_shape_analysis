@@ -1,5 +1,6 @@
 import QtQuick 2.14
 import QtQuick.Controls 2.14
+import QtQuick.Controls.Material 2.14
 import QtMultimedia 5.14
 
 Item {
@@ -70,7 +71,7 @@ Item {
         height: width
         color: "white"
         border.width: 3
-        border.color: "grey"
+        border.color: Material.color(Material.Grey)
         radius: width * 0.5
         visible: !root.previewing
         opacity: 0.5
@@ -93,9 +94,9 @@ Item {
 
         width: Math.min(root.width, root.height) / 8
         height: width
-        color: "lightblue"
+        color: Material.color(Material.LightBlue)
         border.width: 3
-        border.color: "grey"
+        border.color: Material.color(Material.Grey)
         radius: width * 0.5
         visible: root.previewing
 
@@ -105,6 +106,7 @@ Item {
             onClicked: {
                 backend.setPhoto(root.photoLocation)
                 closePreview()
+                window.currentTheme = window.configuredTheme
                 stackView.pop()
             }
         }
