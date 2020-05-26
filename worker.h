@@ -20,10 +20,10 @@ public slots:
 signals:
     void finished(TheoreticalModelParameters parameters);
     void progressChanged(double progress);
-    void canceled();
+    void cancelled();
 
 private:
-    bool m_canceled;
+    bool m_cancelled;
 };
 
 #endif // WORKER_H

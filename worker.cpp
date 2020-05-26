@@ -3,11 +3,13 @@
 #include <QCoreApplication>
 #include <QQueue>
 #include <QPair>
-#include <QDebug>
+#include <QThread>
+#include <QMutex>
+#include <QEventLoop>
 
 void Worker::doWork(const QVector<QPointF> &experimental, TheoreticalModelParameters::DropType dropType, double precision, int cutoffMoment)
 {
-    m_canceled = false;
+    m_cancelled = false;
 
     const double minB =  0.1, maxB =  3.0;
     const double minC = -6.0, maxC = 0.0;
@@ -28,12 +30,14 @@ void Worker::doWork(const QVector<QPointF> &experimental, TheoreticalModelParame
     TheoreticalModelParameters bestParameters(dropType, 0, 0, precision, cutoffMoment);
     double bestError = qInf();
 
-#pragma omp parallel
-    for (;;) {
+    QMutex m1, m2, m3;
+    auto threadWork = [&]()
+    {
+        bool queueIsEmpty = false;
         double b, c;
-        bool queueIsEmpty;
-#pragma omp critical
+        while(!queueIsEmpty)
         {
+            m1.lock();
             queueIsEmpty = queue.isEmpty();
             if (!queueIsEmpty) {
                 auto p = queue.dequeue();
@@ -44,69 +48,108 @@ void Worker::doWork(const QVector<QPointF> &experimental, TheoreticalModelParame
                     QCoreApplication::processEvents();
                     double progress = tableSizeB * tableSizeC - queue.size();
                     progress /= tableSizeB * tableSizeC;
+                    m2.lock();
                     emit progressChanged(progress);
+                    m2.unlock();
                 }
-                if (m_canceled)
+                if(m_cancelled)
+                {
+                    m1.unlock();
                     break;
+                }
             }
-        }
-        if (queueIsEmpty)
-            break;
+            m1.unlock();
 
-        auto f = [b, dropType, precision, cutoffMoment, &experimental](double c){
-            return DropGenerator::calculateError(DropGenerator::generateTheoreticalModel(TheoreticalModelParameters(dropType, b, c, precision, cutoffMoment)), experimental);
-        };
-
-        auto der = [f](double c){
-            const double h = 0.001;
-            return (f(c + h) - f(c)) / h;
-        };
-
-
-        double cNext;
-        int steps = 0;
-        const int maxSteps = 75;
-        while(steps < maxSteps)
-        {
-            double alpha = 0.1;
-
-            const double fc = f(c);
-            double fcn;
-            do
-            {
-                cNext = c -alpha*der(c);
-                alpha /= 2;
-
-                fcn = f(cNext);
-
-                ++steps;
-            } while(fc <= fcn && qAbs(cNext - c) > gdPrecision && !(qIsInf(fc) && qIsInf(fcn)) && steps < maxSteps);
-
-            if(qAbs(cNext - c) <= gdPrecision || (qIsInf(fc) && qIsInf(fcn)))
+            if(queueIsEmpty)
                 break;
+            auto f = [b, dropType, precision, cutoffMoment, &experimental](double c){
+                return DropGenerator::calculateError(DropGenerator::generateTheoreticalModel(TheoreticalModelParameters(dropType, b, c, precision, cutoffMoment)), experimental);
+            };
 
+            auto der = [f](double c){
+                const double h = 0.001;
+                return (f(c + h) - f(c)) / h;
+            };
+
+
+            double cNext;
+            int steps = 0;
+            const int maxSteps = 75;
+            while(steps < maxSteps)
+            {
+                double alpha = 0.1;
+
+                const double fc = f(c);
+                double fcn;
+                do
+                {
+                    cNext = c -alpha*der(c);
+                    alpha /= 2;
+
+                    fcn = f(cNext);
+
+                    ++steps;
+                } while(fc <= fcn && qAbs(cNext - c) > gdPrecision && !(qIsInf(fc) && qIsInf(fcn)) && steps < maxSteps);
+
+                if(qAbs(cNext - c) <= gdPrecision || (qIsInf(fc) && qIsInf(fcn)))
+                    break;
+
+                c = cNext;
+            }
             c = cNext;
-        }
-        c = cNext;
 
-        double error = f(c);
-#pragma omp critical
-        {
+            double error = f(c);
+
+            m3.lock();
             if (error < bestError) {
                 bestParameters.c = c;
                 bestParameters.b = b;
                 bestError = error;
             }
+            m3.unlock();
         }
+    };
+
+    unsigned threadCount = 4;
+    QThread* threads[threadCount];
+
+    for(QThread*& t : threads)
+    {
+        t = QThread::create(threadWork);
+        t->start();
     }
 
-    if (m_canceled)
-        emit canceled();
+    QEventLoop eventLoop;
+
+    unsigned threadsJoined = 0;
+
+    auto countJoinedThreads = [threadCount, &eventLoop, &threadsJoined]()
+    {
+        if(++threadsJoined == threadCount)
+            eventLoop.quit();
+    };
+
+    for(QThread* t : threads)
+    {
+        connect(t, &QThread::finished, countJoinedThreads);
+    }
+
+    eventLoop.exec();
+
+
+    for(QThread*& t : threads)
+    {
+        t->wait();
+        t->deleteLater();
+    }
+
+    if (m_cancelled)
+        emit cancelled();
     else
         emit finished(bestParameters);
 }
 
 void Worker::cancel()
 {
-    m_canceled = true;
+    m_cancelled = true;
 }

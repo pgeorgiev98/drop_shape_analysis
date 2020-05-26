@@ -198,8 +198,8 @@ bool Backend::minimizeError(int dropType, double step)
 
     connect(m_worker, &Worker::finished, this, destroyWorker, Qt::QueuedConnection);
 
-    connect(m_worker, &Worker::canceled, this, destroyWorker, Qt::QueuedConnection);
-    connect(m_worker, &Worker::canceled, this, &Backend::operationCanceled, Qt::QueuedConnection);
+    connect(m_worker, &Worker::cancelled, this, destroyWorker, Qt::QueuedConnection);
+    connect(m_worker, &Worker::cancelled, this, &Backend::operationCanceled, Qt::QueuedConnection);
 
     return true;
 }
