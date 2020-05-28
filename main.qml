@@ -42,27 +42,39 @@ ApplicationWindow {
         }
     }
 
+    function loadTextFile(url) {
+        if (!backend.loadExperimentalFromTextFile(url)) {
+            errorMessagePopup.errorMessage = backend.lastError()
+            errorMessagePopup.open()
+        }
+    }
+
+    function loadImageFile(url) {
+        if (!backend.loadExperimentalFromImageFile(fileUrl)) {
+            errorMessagePopup.errorMessage = backend.lastError()
+            errorMessagePopup.open()
+        }
+    }
+
     FileDialog {
         id: textFileDialog
         selectExisting: true
+        selectFolder: false
+        selectMultiple: false
 
         onAccepted: {
-            if (!backend.loadExperimentalFromTextFile(fileUrl)) {
-                errorMessagePopup.errorMessage = backend.lastError()
-                errorMessagePopup.open()
-            }
+            loadTextFile(fileUrl)
         }
     }
 
     FileDialog {
         id: imageFileDialog
         selectExisting: true
+        selectFolder: false
+        selectMultiple: false
 
         onAccepted: {
-            if (!backend.loadExperimentalFromImageFile(fileUrl)) {
-                errorMessagePopup.errorMessage = backend.lastError()
-                errorMessagePopup.open()
-            }
+            loadTextFile(fileUrl)
         }
     }
 
@@ -136,7 +148,14 @@ ApplicationWindow {
                 text: "Open text file"
                 onClicked: {
                     experimentalSelectPopup.close()
-                    textFileDialog.open();
+                    if (backend.isOnAndroid()) {
+                        textFileDialog.open();
+                    } else {
+                        var url = backend.getExperimentalDataFilePath()
+                        if (url !== "") {
+                            loadTextFile(url)
+                        }
+                    }
                 }
             }
             ToolButton {
@@ -144,7 +163,14 @@ ApplicationWindow {
                 text: "Open image/photo"
                 onClicked: {
                     experimentalSelectPopup.close()
-                    imageFileDialog.open();
+                    if (backend.isOnAndroid()) {
+                        imageFileDialog.open();
+                    } else {
+                        var url = backend.getImageDataFilePath()
+                        if (url !== "") {
+                            loadImageFile(url)
+                        }
+                    }
                 }
             }
             ToolButton {

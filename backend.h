@@ -49,6 +49,11 @@ public slots:
     QString getTempDir();
     void setPhoto(QString path);
 
+    QString getExperimentalDataFilePath();
+    QString getImageDataFilePath();
+
+    bool isOnAndroid() const;
+
 private slots:
     void updateErrorSeries();
 

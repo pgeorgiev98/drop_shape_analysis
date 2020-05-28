@@ -226,3 +226,70 @@ void Backend::setPhoto(QString path)
     qDebug() << image;
     // TODO
 }
+
+#ifdef Q_OS_ANDROID
+
+QString Backend::getExperimentalDataFilePath()
+{
+    return QString();
+}
+
+QString Backend::getImageDataFilePath()
+{
+    return QString();
+}
+
+bool Backend::isOnAndroid() const
+{
+    return true;
+}
+
+#else
+
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QUrl>
+#include <QSettings>
+
+QString Backend::getExperimentalDataFilePath()
+{
+    QSettings s;
+    QString dir = s.value("experimental-data-dir").toString();
+    QFileDialog dialog;
+    dialog.setDirectory(dir);
+    dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptOpen);
+    dialog.setFileMode(QFileDialog::FileMode::ExistingFile);
+    if (dialog.exec()) {
+        QUrl url = dialog.selectedUrls().first();
+        QFileInfo fi(url.toLocalFile());
+        s.setValue("experimental-data-dir", fi.dir().path());
+        return url.toString();
+    } else {
+        return QString();
+    }
+}
+
+QString Backend::getImageDataFilePath()
+{
+    QSettings s;
+    QString dir = s.value("image-dir").toString();
+    QFileDialog dialog;
+    dialog.setDirectory(dir);
+    dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptOpen);
+    dialog.setFileMode(QFileDialog::FileMode::ExistingFile);
+    if (dialog.exec()) {
+        QUrl url = dialog.selectedUrls().first();
+        QFileInfo fi(url.toLocalFile());
+        s.setValue("image-dir", fi.dir().path());
+        return url.toString();
+    } else {
+        return QString();
+    }
+}
+
+bool Backend::isOnAndroid() const
+{
+    return false;
+}
+
+#endif
