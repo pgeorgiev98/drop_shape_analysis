@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "dropgenerator.h"
-#include "worker.h"
+#include "gradientdescent.h"
 
 #include <QTextStream>
 #include <QPainter>
@@ -237,10 +237,10 @@ void MainWindow::visualiseClosestTheoreticalModel()
     waitingDialog.setLayout(l);
 
     QThread *workerThread = new QThread(this);
-    Worker *worker = new Worker;
+    GradientDescent *worker = new GradientDescent;
     worker->moveToThread(workerThread);
 
-    connect(worker, &Worker::progressChanged, progressBar, [progressBar](double progress) {
+    connect(worker, &GradientDescent::progressChanged, progressBar, [progressBar](double progress) {
         progressBar->setValue(int(1000 * progress));
     }, Qt::QueuedConnection);
 
@@ -257,8 +257,8 @@ void MainWindow::visualiseClosestTheoreticalModel()
     singleShotTimer.start(0);
 
     TheoreticalModelParameters bestParameters;
-    connect(worker, &Worker::finished, this, &MainWindow::setBestTheoreticalModel, Qt::QueuedConnection);
-    connect(worker, &Worker::finished, &waitingDialog, &QDialog::accept, Qt::QueuedConnection);
+    connect(worker, &GradientDescent::finished, this, &MainWindow::setBestTheoreticalModel, Qt::QueuedConnection);
+    connect(worker, &GradientDescent::finished, &waitingDialog, &QDialog::accept, Qt::QueuedConnection);
 
     waitingDialog.exec();
 

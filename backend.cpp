@@ -1,6 +1,6 @@
 #include "backend.h"
 #include "dropgenerator.h"
-#include "worker.h"
+#include "gradientdescent.h"
 #include <QXYSeries>
 #include <QChart>
 #include <QFile>
@@ -165,10 +165,10 @@ bool Backend::minimizeError(int dropType, double step)
     }
 
     m_operationThread = new QThread(this);
-    m_worker = new Worker;
+    m_worker = new GradientDescent;
     m_worker->moveToThread(m_operationThread);
 
-    connect(m_worker, &Worker::progressChanged, this, &Backend::progressChanged, Qt::QueuedConnection);
+    connect(m_worker, &GradientDescent::progressChanged, this, &Backend::progressChanged, Qt::QueuedConnection);
 
     QTimer *singleShotTimer = new QTimer(this);
     singleShotTimer->setSingleShot(true);
@@ -183,7 +183,7 @@ bool Backend::minimizeError(int dropType, double step)
     singleShotTimer->start(0);
 
     TheoreticalModelParameters bestParameters;
-    connect(m_worker, &Worker::finished, this, [this](TheoreticalModelParameters params) {
+    connect(m_worker, &GradientDescent::finished, this, [this](TheoreticalModelParameters params) {
         emit operationCompleted(params.b, params.c);
     }, Qt::QueuedConnection);
 
@@ -196,10 +196,10 @@ bool Backend::minimizeError(int dropType, double step)
         m_operationThread = nullptr;
     };
 
-    connect(m_worker, &Worker::finished, this, destroyWorker, Qt::QueuedConnection);
+    connect(m_worker, &GradientDescent::finished, this, destroyWorker, Qt::QueuedConnection);
 
-    connect(m_worker, &Worker::cancelled, this, destroyWorker, Qt::QueuedConnection);
-    connect(m_worker, &Worker::cancelled, this, &Backend::operationCanceled, Qt::QueuedConnection);
+    connect(m_worker, &GradientDescent::cancelled, this, destroyWorker, Qt::QueuedConnection);
+    connect(m_worker, &GradientDescent::cancelled, this, &Backend::operationCanceled, Qt::QueuedConnection);
 
     return true;
 }
@@ -210,7 +210,7 @@ void Backend::cancelOperation()
     if (m_worker && m_operationThread) {
         QTimer *timer = new QTimer(this);
         timer->setSingleShot(true);
-        connect(timer, &QTimer::timeout, m_worker, &Worker::cancel, Qt::QueuedConnection);
+        connect(timer, &QTimer::timeout, m_worker, &GradientDescent::cancel, Qt::QueuedConnection);
         timer->start(0);
     }
 }

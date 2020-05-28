@@ -13,7 +13,7 @@ namespace QtCharts {
     class QXYSeries;
 }
 
-class Worker;
+class GradientDescent;
 
 class Backend : public QObject
 {
@@ -62,7 +62,7 @@ private:
     QVector<QPointF> m_experimentalProfile;
 
     QThread *m_operationThread;
-    Worker *m_worker;
+    GradientDescent *m_worker;
 
     QTemporaryDir m_tempDir;
 };
