@@ -13,6 +13,7 @@ using namespace QtCharts;
 
 Backend::Backend(QObject *parent)
     : QObject(parent)
+    , m_cutoffMoment(0)
     , m_operationThread(nullptr)
     , m_worker(nullptr)
 {
@@ -66,9 +67,9 @@ static void adjustAxes(QChart *chart)
 
 void Backend::generateTheoreticalProfile(double b, double c,
                                          int type,
-                                         double precision, int cutoffMoment)
+                                         double precision)
 {
-    TheoreticalModelParameters params(TheoreticalModelParameters::DropType(type), b, c, precision, cutoffMoment);
+    TheoreticalModelParameters params(TheoreticalModelParameters::DropType(type), b, c, precision, m_cutoffMoment);
     auto v = DropGenerator::generateTheoreticalModel(params);
     m_theoreticalProfile = v;
     m_theoretical->replace(v);
@@ -120,7 +121,7 @@ bool Backend::loadExperimentalFromTextFile(QString fileUrl)
     m_experimentalProfile = points;
 
     m_experimental->replace(points);
-    // TODO: update cutoff
+    updateCutoffMoment();
 
     QChart *chart = m_experimental->chart();
     adjustAxes(chart);
@@ -137,7 +138,7 @@ bool Backend::loadExperimentalFromImageFile(QString fileUrl)
     m_experimentalProfile = drop;
 
     m_experimental->replace(drop);
-    // TODO: update cutoff
+    updateCutoffMoment();
 
     QChart *chart = m_experimental->chart();
     adjustAxes(chart);
@@ -155,6 +156,17 @@ void Backend::updateErrorSeries()
 
     QChart *chart = m_error->chart();
     adjustAxes(chart);
+}
+
+void Backend::updateCutoffMoment()
+{
+    m_cutoffMoment = 0;
+    for (const QPointF &p : m_experimentalProfile) {
+        if (p.x() > 1.15) { // Magic number
+            m_cutoffMoment = 1;
+            break;
+        }
+    }
 }
 
 bool Backend::minimizeError(int dropType, double step)
@@ -177,7 +189,7 @@ bool Backend::minimizeError(int dropType, double step)
                 &QTimer::timeout,
                 m_worker,
                 [this, dropType, step]() {
-        m_worker->doWork(m_experimentalProfile, TheoreticalModelParameters::DropType(dropType), step, 0); // TODO: cutoffMoment
+        m_worker->doWork(m_experimentalProfile, TheoreticalModelParameters::DropType(dropType), step, m_cutoffMoment);
     }, Qt::QueuedConnection);
     m_operationThread->start();
     singleShotTimer->start(0);

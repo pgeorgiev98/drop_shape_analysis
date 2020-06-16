@@ -25,7 +25,7 @@ Item {
         var c = inputC.text
         var step = inputStep.text
         var type = (inputType.currentText === "Pendant" ? 0 : 1)
-        backend.generateTheoreticalProfile(b, c, type, step, 0)
+        backend.generateTheoreticalProfile(b, c, type, step)
     }
 
     GridLayout {
