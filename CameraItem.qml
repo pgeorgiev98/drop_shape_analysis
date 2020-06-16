@@ -40,6 +40,8 @@ Item {
                 console.log(preview)
                 console.log(photoPreview.source)
                 root.previewing = true
+                stackView.push(editTool)
+                editTool.source = preview
             }
             onImageSaved: {
                 root.photoLocation = path
@@ -82,32 +84,6 @@ Item {
             onClicked: {
                 root.photoLocation = ""
                 camera.imageCapture.captureToLocation(backend.getTempDir())
-            }
-        }
-    }
-
-    Rectangle {
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.rightMargin: width / 2
-        anchors.bottomMargin: width / 2
-
-        width: Math.min(root.width, root.height) / 8
-        height: width
-        color: Material.color(Material.LightBlue)
-        border.width: 3
-        border.color: Material.color(Material.Grey)
-        radius: width * 0.5
-        visible: root.previewing
-
-        MouseArea {
-            anchors.fill: parent
-
-            onClicked: {
-                backend.setPhoto(root.photoLocation)
-                closePreview()
-                window.currentTheme = window.configuredTheme
-                stackView.pop()
             }
         }
     }

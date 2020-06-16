@@ -3,6 +3,7 @@ import QtQuick.Controls 2.14
 import QtQuick.Layouts 1.14
 import QtCharts 2.14
 import QtQuick.Controls.Material 2.14
+import QtQuick 2.14
 
 Item {
     property LineSeries theoreticalSeries: qtheoreticalSeries

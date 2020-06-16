@@ -6,6 +6,7 @@
 #include <QString>
 #include <QVector>
 #include <QPointF>
+#include <QRectF>
 #include <QTemporaryDir>
 
 namespace QtCharts {
@@ -47,12 +48,7 @@ public slots:
     void cancelOperation();
 
     QString getTempDir();
-    void setPhoto(QString path);
-
-    QString getExperimentalDataFilePath();
-    QString getImageDataFilePath();
-
-    bool isOnAndroid() const;
+    void setPhoto(QString path, QRectF crop);
 
 private slots:
     void updateErrorSeries();

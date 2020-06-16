@@ -4,5 +4,6 @@
         <file>qtquickcontrols2.conf</file>
         <file>CameraItem.qml</file>
         <file>MainView.qml</file>
+        <file>EditTool.qml</file>
     </qresource>
 </RCC>

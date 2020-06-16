@@ -204,7 +204,6 @@ bool Backend::minimizeError(int dropType, double step)
     return true;
 }
 
-#include <QDebug>
 void Backend::cancelOperation()
 {
     if (m_worker && m_operationThread) {
@@ -220,76 +219,23 @@ QString Backend::getTempDir()
     return m_tempDir.path();
 }
 
-void Backend::setPhoto(QString path)
+void Backend::setPhoto(QString path, QRectF crop)
 {
     QImage image(path);
-    qDebug() << image;
-    // TODO
-}
-
-#ifdef Q_OS_ANDROID
-
-QString Backend::getExperimentalDataFilePath()
-{
-    return QString();
-}
-
-QString Backend::getImageDataFilePath()
-{
-    return QString();
-}
-
-bool Backend::isOnAndroid() const
-{
-    return true;
-}
-
-#else
-
-#include <QFileDialog>
-#include <QFileInfo>
-#include <QUrl>
-#include <QSettings>
-
-QString Backend::getExperimentalDataFilePath()
-{
-    QSettings s;
-    QString dir = s.value("experimental-data-dir").toString();
-    QFileDialog dialog;
-    dialog.setDirectory(dir);
-    dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptOpen);
-    dialog.setFileMode(QFileDialog::FileMode::ExistingFile);
-    if (dialog.exec()) {
-        QUrl url = dialog.selectedUrls().first();
-        QFileInfo fi(url.toLocalFile());
-        s.setValue("experimental-data-dir", fi.dir().path());
-        return url.toString();
-    } else {
-        return QString();
+    double w = image.width();
+    double h = image.height();
+    QRect cropI;
+    cropI.setX(crop.x() * w);
+    cropI.setY(crop.y() * h);
+    cropI.setWidth(crop.width() * w);
+    cropI.setHeight(crop.height() * h);
+    QImage cropped(cropI.width(), cropI.height(), image.format());
+    for (int y = 0; y < cropI.height(); ++y) {
+        for (int x = 0; x < cropI.width(); ++x) {
+            cropped.setPixel(x, y, image.pixel(cropI.x() + x, cropI.y() + y));
+        }
     }
-}
+    cropped.save(path);
 
-QString Backend::getImageDataFilePath()
-{
-    QSettings s;
-    QString dir = s.value("image-dir").toString();
-    QFileDialog dialog;
-    dialog.setDirectory(dir);
-    dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptOpen);
-    dialog.setFileMode(QFileDialog::FileMode::ExistingFile);
-    if (dialog.exec()) {
-        QUrl url = dialog.selectedUrls().first();
-        QFileInfo fi(url.toLocalFile());
-        s.setValue("image-dir", fi.dir().path());
-        return url.toString();
-    } else {
-        return QString();
-    }
+    loadExperimentalFromImageFile(path);
 }
-
-bool Backend::isOnAndroid() const
-{
-    return false;
-}
-
-#endif
