@@ -232,7 +232,7 @@ QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
         return {};
     }
 
-    double averageValue = 0;
+    double min = qInf(), max = 0;
     for(int i = 0; i < image.height(); ++i)
     {
         for(int j = 0; j < image.width(); ++j)
@@ -242,31 +242,15 @@ QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
             double newColor;
             newColor = 0.2126*r + 0.7152*g + 0.0722*b;
             image.setPixelColor(j, i, QColor(newColor, newColor, newColor));
-            averageValue += image.pixelColor(j, i).valueF();
+            double pixelColor = image.pixelColor(j, i).valueF();
+            if(pixelColor < min)
+                min = pixelColor;
+            if(pixelColor > max)
+                max = pixelColor;
         }
     }
 
-    averageValue /= image.height()*image.width();
-
-    auto white = QColorConstants::White;
-    auto black = QColorConstants::Black;
-
-    for(int i = 0; i < image.height(); ++i)
-    {
-        double rowColorValue = image.pixelColor(0, i).valueF();
-        for(int j = 0; j < image.width(); ++j)
-        {
-            double value = image.pixelColor(j, i).valueF();
-            if(qAbs(value - rowColorValue) > qAbs(averageValue - rowColorValue))
-            {
-                image.setPixelColor(j, i, black);
-            }
-            else
-            {
-                image.setPixelColor(j, i, white);
-            }
-        }
-    }
+    double averageValue = (min + max) / 2;
 
     QVector<QPointF> drop;
     int apex = 0, apexY = 0;
@@ -274,7 +258,8 @@ QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
     {
         for(int j = 0; j < image.width(); ++j)
         {
-            if(image.pixelColor(j, i) == black)
+            double value = image.pixelColor(j, i).valueF();
+            if(value < averageValue)
             {
                 drop.append(QPointF(j, i));
                 if(j > apex)
