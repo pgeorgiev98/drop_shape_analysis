@@ -40,7 +40,7 @@ public slots:
     void setExperimentalSeries(QtCharts::QAbstractSeries *series);
     void setErrorSeries(QtCharts::QAbstractSeries *series);
 
-    void generateTheoreticalProfile(double b, double c, int type, double precision, int cutoffMoment);
+    void generateTheoreticalProfile(double b, double c, int type, double precision);
     bool loadExperimentalFromTextFile(QString fileUrl);
     bool loadExperimentalFromImageFile(QString fileUrl);
     bool minimizeError(int dropType, double step);
@@ -52,6 +52,7 @@ public slots:
 
 private slots:
     void updateErrorSeries();
+    void updateCutoffMoment();
 
 private:
     QtCharts::QXYSeries *m_theoretical;
@@ -61,6 +62,7 @@ private:
     QString m_lastError;
     QVector<QPointF> m_theoreticalProfile;
     QVector<QPointF> m_experimentalProfile;
+    int m_cutoffMoment;
 
     QThread *m_operationThread;
     GradientDescent *m_worker;
