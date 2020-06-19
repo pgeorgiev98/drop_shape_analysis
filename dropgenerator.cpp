@@ -232,49 +232,67 @@ QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
         return {};
     }
 
-    double averageValue = 0;
+    //blur
+    int kernelDimention = 3;
+    QImage blurredImage(image.width(), image.height(), QImage::Format_RGB32);
+
     for(int i = 0; i < image.height(); ++i)
     {
         for(int j = 0; j < image.width(); ++j)
+        {
+            double sum = 0.0;
+            for(int x = -1; x <= 1; ++x)
+            {
+                for(int y = -1; y <= 1; ++y)
+                {
+                    if(i + y >= 0 && i + y < image.height()
+                            && j + x >= 0 && j + x < image.width())
+                    {
+                        sum += image.pixelColor(j + x, i + y).valueF();
+                    }
+                    else
+                    {
+                        sum += 1.0;
+                    }
+
+                }
+            }
+            double blurredPixelValue;
+            blurredPixelValue = sum / (kernelDimention * kernelDimention);
+            blurredImage.setPixelColor(j, i, QColor(blurredPixelValue*255, blurredPixelValue*255, blurredPixelValue*255));
+        }
+    }
+
+    blurredImage.save("/tmp/foo.png");
+
+    double min = qInf(), max = 0;
+    for(int i = 0; i < blurredImage.height(); ++i)
+    {
+        for(int j = 0; j < blurredImage.width(); ++j)
         {
             int r, g, b;
-            image.pixelColor(j, i).getRgb(&r, &g, &b);
+            blurredImage.pixelColor(j, i).getRgb(&r, &g, &b);
             double newColor;
             newColor = 0.2126*r + 0.7152*g + 0.0722*b;
-            image.setPixelColor(j, i, QColor(newColor, newColor, newColor));
-            averageValue += image.pixelColor(j, i).valueF();
+            blurredImage.setPixelColor(j, i, QColor(newColor, newColor, newColor));
+            double pixelColor = blurredImage.pixelColor(j, i).valueF();
+            if(pixelColor < min)
+                min = pixelColor;
+            if(pixelColor > max)
+                max = pixelColor;
         }
     }
 
-    averageValue /= image.height()*image.width();
-
-    auto white = QColorConstants::White;
-    auto black = QColorConstants::Black;
-
-    for(int i = 0; i < image.height(); ++i)
-    {
-        double rowColorValue = image.pixelColor(0, i).valueF();
-        for(int j = 0; j < image.width(); ++j)
-        {
-            double value = image.pixelColor(j, i).valueF();
-            if(qAbs(value - rowColorValue) > qAbs(averageValue - rowColorValue))
-            {
-                image.setPixelColor(j, i, black);
-            }
-            else
-            {
-                image.setPixelColor(j, i, white);
-            }
-        }
-    }
+    double averageValue = (min + max) / 2;
 
     QVector<QPointF> drop;
     int apex = 0, apexY = 0;
-    for(int i = image.height() - 1; i >= 0; --i)
+    for(int i = blurredImage.height() - 1; i >= 0; --i)
     {
-        for(int j = 0; j < image.width(); ++j)
+        for(int j = 0; j < blurredImage.width(); ++j)
         {
-            if(image.pixelColor(j, i) == black)
+            double value = blurredImage.pixelColor(j, i).valueF();
+            if(value < averageValue)
             {
                 drop.append(QPointF(j, i));
                 if(j > apex)
@@ -295,5 +313,18 @@ QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
         point.setY(apexY - point.y());
         point /= scaleFactor;
     }
+/*
+    double offset = 0.1;
+    int groupSize = 5;
+    for(int i = 0; i < drop.size(); ++i)
+    {
+        QVector<double> distances;
+        for(int j = i; j < groupSize + 1; ++j)
+        {
+            distances[j] = qAbs(drop[j].x() - drop[j+1].x());
+            qDebug() << distances[j];
+        }
+    }
+*/
     return drop;
 }
