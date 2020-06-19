@@ -27,9 +27,15 @@ Item {
 
         imageProcessing.whiteBalanceMode: CameraImageProcessing.WhiteBalanceFlash
 
+        captureMode: Camera.CaptureStillImage
+
         exposure {
-            exposureCompensation: -1.0
-            exposureMode: Camera.ExposurePortrait
+            exposureMode: Camera.ExposureAuto
+        }
+
+        focus {
+            focusMode: Camera.FocusContinuous
+            focusPointMode: Camera.FocusPointCustom
         }
 
         flash.mode: Camera.FlashRedEyeReduction
