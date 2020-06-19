@@ -6,13 +6,7 @@ import QtMultimedia 5.14
 Item {
     id: root
 
-    property bool previewing: false
     property string photoLocation: ""
-
-    function closePreview() {
-        photoPreview.source = ""
-        root.previewing = false
-    }
 
     onVisibleChanged: {
         if (visible) {
@@ -42,10 +36,6 @@ Item {
 
         imageCapture {
             onImageCaptured: {
-                photoPreview.source = preview  // Show the preview in an Image
-                console.log(preview)
-                console.log(photoPreview.source)
-                root.previewing = true
                 stackView.push(editTool)
                 editTool.source = preview
             }
@@ -61,13 +51,6 @@ Item {
         anchors.fill: parent
         focus : visible // to receive focus and capture key events when visible
         orientation: camera.orientation
-        visible: !root.previewing
-    }
-
-    Image {
-        id: photoPreview
-        anchors.fill: parent
-        fillMode: Image.PreserveAspectFit
     }
 
     Rectangle {
@@ -81,7 +64,6 @@ Item {
         border.width: 3
         border.color: Material.color(Material.Grey)
         radius: width * 0.5
-        visible: !root.previewing
         opacity: 0.5
 
         MouseArea {
