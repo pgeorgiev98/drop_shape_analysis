@@ -232,7 +232,6 @@ QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
         return {};
     }
 
-    //blur
     int kernelDimention = 3;
     QImage blurredImage(image.width(), image.height(), QImage::Format_RGB32);
 
@@ -262,8 +261,6 @@ QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
             blurredImage.setPixelColor(j, i, QColor(blurredPixelValue*255, blurredPixelValue*255, blurredPixelValue*255));
         }
     }
-
-    blurredImage.save("/tmp/foo.png");
 
     double min = qInf(), max = 0;
     for(int i = 0; i < blurredImage.height(); ++i)
@@ -313,18 +310,6 @@ QVector<QPointF> DropGenerator::generateModelFromImage(const QString fileName)
         point.setY(apexY - point.y());
         point /= scaleFactor;
     }
-/*
-    double offset = 0.1;
-    int groupSize = 5;
-    for(int i = 0; i < drop.size(); ++i)
-    {
-        QVector<double> distances;
-        for(int j = i; j < groupSize + 1; ++j)
-        {
-            distances[j] = qAbs(drop[j].x() - drop[j+1].x());
-            qDebug() << distances[j];
-        }
-    }
-*/
+
     return drop;
 }
