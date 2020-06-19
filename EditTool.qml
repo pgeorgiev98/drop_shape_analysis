@@ -10,17 +10,20 @@ Item {
     property color normalColor: "white"
     property color hoveredColor: "grey"
 
+    property real frameMargin: 32
+
     id: root
 
     Image {
         id: photoPreview
         anchors.fill: parent
+        anchors.margins: root.frameMargin
         fillMode: Image.PreserveAspectFit
         source: root.source
     }
 
     Rectangle {
-        property real handlesSize: 16
+        property real handlesSize: 32
         property real initWidth: 100
         property real initHeight: 100
 
@@ -31,13 +34,10 @@ Item {
         anchors.top: top.top
         anchors.bottom: bottom.bottom
 
-        anchors.leftMargin: handlesSize
-        anchors.rightMargin: handlesSize
-        anchors.topMargin: handlesSize
-        anchors.bottomMargin: handlesSize
+        anchors.margins: handlesSize
 
         height: 100
-        color: "red"
+        color: "white"
         opacity: 0.25
 
         MouseArea {
@@ -46,7 +46,7 @@ Item {
             drag.target: parent
             drag.axis: Drag.XAxis
             drag.minimumX: 0
-            drag.maximumX: root.width
+            drag.maximumX: photoPreview.width
         }
     }
 
@@ -56,14 +56,15 @@ Item {
         width: selection.handlesSize
         anchors.top: top.bottom
         anchors.bottom: bottom.top
-        x: (root.width - photoPreview.paintedWidth) / 2
+        x: root.frameMargin + (photoPreview.width - photoPreview.paintedWidth) / 2
+
         MouseArea {
             id: leftArea
             anchors.fill: parent
             drag.target: parent
             drag.axis: Drag.XAxis
-            drag.minimumX: (root.width - photoPreview.paintedWidth) / 2
-            drag.maximumX: right.x - selection.handlesSize
+            drag.minimumX: root.frameMargin + (photoPreview.width - photoPreview.paintedWidth) / 2
+            drag.maximumX: root.frameMargin + right.x - selection.handlesSize
         }
     }
 
@@ -73,14 +74,14 @@ Item {
         width: selection.handlesSize
         anchors.top: top.bottom
         anchors.bottom: bottom.top
-        x: root.width - selection.handlesSize - (root.width - photoPreview.paintedWidth) / 2
+        x: root.frameMargin + photoPreview.width - selection.handlesSize - (photoPreview.width - photoPreview.paintedWidth) / 2
         MouseArea {
             id: rightArea
             anchors.fill: parent
             drag.target: parent
             drag.axis: Drag.XAxis
-            drag.minimumX: left.x + selection.handlesSize
-            drag.maximumX: root.width - selection.handlesSize - (root.width - photoPreview.paintedWidth) / 2
+            drag.minimumX: root.frameMargin + left.x + selection.handlesSize
+            drag.maximumX: root.frameMargin + photoPreview.width - selection.handlesSize - (photoPreview.width - photoPreview.paintedWidth) / 2
         }
     }
 
@@ -90,15 +91,15 @@ Item {
         height: selection.handlesSize
         anchors.left: left.right
         anchors.right: right.left
-        y: (root.height - photoPreview.paintedHeight) / 2
+        y: root.frameMargin + (photoPreview.height - photoPreview.paintedHeight) / 2
 
         MouseArea {
             id: topArea
             anchors.fill: parent
             drag.target: parent
             drag.axis: Drag.YAxis
-            drag.minimumY: (root.height - photoPreview.paintedHeight) / 2
-            drag.maximumY: bottom.y - selection.handlesSize
+            drag.minimumY: root.frameMargin + (photoPreview.height - photoPreview.paintedHeight) / 2
+            drag.maximumY: root.frameMargin + bottom.y - selection.handlesSize
         }
     }
 
@@ -108,14 +109,14 @@ Item {
         height: selection.handlesSize
         anchors.left: left.right
         anchors.right: right.left
-        y: root.height - selection.handlesSize - (root.height - photoPreview.paintedHeight) / 2
+        y: root.frameMargin + photoPreview.height - selection.handlesSize - (photoPreview.height - photoPreview.paintedHeight) / 2
         MouseArea {
             id: bottomArea
             anchors.fill: parent
             drag.target: parent
             drag.axis: Drag.YAxis
-            drag.minimumY: top.y + selection.handlesSize
-            drag.maximumY: root.height - selection.handlesSize - (root.height - photoPreview.paintedHeight) / 2
+            drag.minimumY: root.frameMargin + top.y + selection.handlesSize
+            drag.maximumY: root.frameMargin + photoPreview.height - selection.handlesSize - (photoPreview.height - photoPreview.paintedHeight) / 2
         }
     }
 
@@ -125,7 +126,7 @@ Item {
         anchors.rightMargin: width / 2
         anchors.bottomMargin: width / 2
 
-        width: Math.min(root.width, root.height) / 8
+        width: Math.min(photoPreview.width, photoPreview.height) / 8
         height: width
         color: Material.color(Material.LightBlue)
         border.width: 3
@@ -136,12 +137,12 @@ Item {
             anchors.fill: parent
 
             onClicked: {
-                var dw = root.width - photoPreview.paintedWidth
-                var dh = root.height - photoPreview.paintedHeight
-                var x0 = (left.x - dw / 2 + 16) / photoPreview.paintedWidth
-                var y0 = (top.y - dh / 2 + 16) / photoPreview.paintedHeight
-                var x1 = (right.x - dw / 2) / photoPreview.paintedWidth
-                var y1 = (bottom.y - dh / 2) / photoPreview.paintedHeight
+                var dw = photoPreview.width - photoPreview.paintedWidth
+                var dh = photoPreview.height - photoPreview.paintedHeight
+                var x0 = (left.x - root.frameMargin - dw / 2 + selection.handlesSize) / photoPreview.paintedWidth
+                var y0 = (top.y - root.frameMargin - dh / 2 + selection.handlesSize) / photoPreview.paintedHeight
+                var x1 = (right.x - root.frameMargin - dw / 2) / photoPreview.paintedWidth
+                var y1 = (bottom.y - root.frameMargin - dh / 2) / photoPreview.paintedHeight
                 var w = x1 - x0
                 var h = y1 - y0
                 var croppedRect = Qt.rect(x0, y0, w, h)
